@@ -32,11 +32,12 @@ function render(){
   $('#desk-title').textContent=resource==='booking'?'A considered calendar.':'Objects for everyday rituals.';
   $('#record-count').textContent=`${rows.length} records`;
   $('#records').innerHTML=rows.map(r=>`<button class="record ${selected===r.record_id?'selected':''}" data-record="${esc(r.record_id)}"><span class="avatar">${esc(r.fields.name.split(' ').map(n=>n[0]).slice(0,2).join(''))}</span><span class="record-info"><span class="record-name">${esc(r.fields.name)}</span><span class="record-detail">${esc(r.fields.service||r.fields.item)}</span></span><span class="record-right">${esc(resource==='booking'?r.fields.day+' · '+r.fields.time:'Qty '+r.fields.quantity)}<small>$${Number(r.fields.price).toFixed(2)} · v${r.version}</small></span></button>`).join('');
-  renderPermission();renderEditor();renderAudit();
+  renderPermission();renderEditor();renderAudit();window.dispatchEvent(new Event('iris:state'));
 }
 function renderPermission(){
   const card=$('#permission-card');
   if(!permission)return;
+  window.dispatchEvent(new Event('iris:permission'));
   $('#permission-status').textContent='Permission locked';$('#permission-status').classList.add('locked');
   card.className='permission-detail';
   card.innerHTML=`<blockquote>“${esc(permission.sentence)}”</blockquote><div class="rule"><span>RESOURCE / RECORD</span><strong>${esc(permission.resource_type)} / ${esc(permission.record_id)}</strong></div>${Object.entries(permission.set_fields).map(([k,v])=>`<div class="rule allowed"><span>SET ${esc(k.toUpperCase())}</span><strong>→ ${esc(v)}</strong></div>`).join('')}<div class="rule"><span>KEEP UNCHANGED</span><strong>${Object.entries(permission.preserve_fields).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join('<br>')}</strong></div><div class="rule"><span>FORBIDDEN</span><strong>${permission.forbidden_operations.map(esc).join(', ')}<br>Every other record</strong></div><div class="rule"><span>BASED ON</span><strong>Record version ${permission.version}</strong></div>`;

@@ -14,3 +14,7 @@ Combined provider-usage accounting for these two tasks was $0.088694. The planne
 Actual network probes from the running browser container verified: gateway reachable; public internet, both host owner ports, and the owner container IP unreachable. Docker inspection confirmed no mounted storage, no Docker socket, no Meta API key, and membership only in the internal browser network. The software test suite also covers token-gated frame ingestion, stale-frame refusal, and stopping during the independent reader without a save.
 
 This evidence establishes the live agent loop and both resources. It does not establish Cal interception, voice capture, prompt-injection robustness, held-out superiority, arbitrary-site support, or a completed video.
+
+## Owner leaves and returns
+
+A subsequent live UI run used the clarified planner prompt and the redesigned workspace. The test entered an instruction through the UI, reviewed the generated permission, clicked Start agent, and closed the owner page. The worker continued independently. Reopening the page recovered the completed permission and database receipt. New invented guest Nila a40ee1 moved Monday → Friday, price $163 remained unchanged, and version advanced from 1 to 2. Spark took 3 actions; additional accounted model cost was $0.014032. Trace: `docs/evidence/ui-away-return.json`. Mobile overflow, dialog keyboard dismissal, and JavaScript errors were also checked. This is a development integration check, not a held-out result.

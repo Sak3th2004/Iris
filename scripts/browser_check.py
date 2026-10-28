@@ -25,6 +25,7 @@ with tempfile.TemporaryDirectory() as temp:
             page.on('pageerror',lambda error:errors.append(str(error)))
             page.goto('http://127.0.0.1:8767')
             page.locator('#toggle-manual').click()
+            page.locator('.advanced-permission summary').click()
             page.locator('#manual-form button').click()
             expect(page.locator('#permission-status')).to_have_text('Permission locked')
             page.locator('[data-record="bk-bob"]').click()

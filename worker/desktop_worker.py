@@ -35,6 +35,8 @@ async def main():
                 response = await client.post(f'/jobs/{id}/events',json={'action':action,'detail':str(detail)[:300]})
                 response.raise_for_status()
             async def click(locator):
+                await page.evaluate("document.querySelectorAll('[data-iris-active]').forEach(el=>el.removeAttribute('data-iris-active'))")
+                await locator.evaluate("el=>el.setAttribute('data-iris-active','true')")
                 await locator.scroll_into_view_if_needed()
                 box = await locator.bounding_box()
                 await page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2,steps=12)

@@ -22,6 +22,7 @@ async function pollDesktop() {
   try {
     const status = await api('desktop');
     liveJob = status.job;
+    window.dispatchEvent(new CustomEvent('iris:desktop',{detail:status}));
     if(liveJob && liveJob.id!==displayedJob && !permission && status.permission){
       permission=status.permission;
       renderPermission();

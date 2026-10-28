@@ -6,6 +6,8 @@ Iris turns an instruction into a readable permission and enforces it at the data
 
 Built for the Meta Global AI Developer Hackathon. This repository is new work; Second Self is an architectural reference for a visible separate desktop, not a code or design dependency.
 
+**First time here?** Follow [Try the live agent](docs/TRY_IRIS.md). The UI now guides describe → review permission → agent works → database receipt, with live-only activity indication and a build-status checklist. A real UI run has verified closing the owner page while the agent works and recovering the completed receipt after reopening.
+
 ## Run locally
 
 For the **live isolated agent**, use the [Docker desktop setup](docs/DOCKER_DESKTOP.md): `docker compose up -d --build`, then open **http://127.0.0.1:8768**. This is the verified deployment. The browser runs inside Docker Desktop's Linux VM on an internal network, and its actual viewport streams to the owner interface. The host-only command below is useful for API/UI development.
