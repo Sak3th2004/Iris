@@ -6,7 +6,7 @@ Not ready to submit. Replace pending claims with actual evidence.
 
 Iris addresses a practical failure in delegated browser work: the agent can click the right button on the wrong record. It converts a person's instruction into a readable permission, then checks the actual proposed database write. Identity, protected fields, prohibited operations, and the original version all matter. Booking and store-order desks demonstrate the same generic boundary.
 
-New work in this repository: permission schema and gate, transactional SQLite ledger, two owned resource desks, permission UI, Meta adapters, independent-reader service, and VM browser-worker code. Cal integration, VM end-to-end validation, evaluation, and recording are pending. Do not describe the local desk as a live VM.
+New work in this repository: permission schema and gate, transactional SQLite ledger, two owned resource desks, permission UI, Meta adapters, independent-reader service, isolated Docker browser worker, live browser-frame transport, and transactional owner stop. Real paid booking and order tasks have completed in Docker Desktop's Linux VM. Cal integration, adversarial end-to-end validation, held-out evaluation, and submission recording remain pending. Describe the stream precisely as the isolated browser viewport, not an entire Windows or Linux desktop.
 
 Meta's roles: Muse Voice Transcribe captures the sentence; Muse Spark interprets it and selects browser actions; a separate Spark prompt independently reads the form. The deterministic gate enforces the permission. Spark Open is planned for the blind reader when credits arrive; no open-weights bonus claim yet. SAM is intentionally excluded unless measured benefit justifies it.
 

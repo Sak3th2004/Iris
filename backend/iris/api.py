@@ -82,7 +82,8 @@ def create_app(path=None):
     @app.get('/api/desktop')
     def desktop_status():
         job = jobs.latest()
-        return desktop.status() | {'job':job,'events':desktop.events(job['id']) if job else []}
+        permission = store.permission(job['permission_id'],active_only=False) if job else None
+        return desktop.status() | {'job':job,'permission':permission.model_dump() if permission else None,'events':desktop.events(job['id']) if job else []}
 
     @app.get('/api/desktop/frame')
     def desktop_frame():

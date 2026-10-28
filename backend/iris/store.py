@@ -72,9 +72,9 @@ class Store:
             db.execute("INSERT INTO permissions(id,body) VALUES(?,?)", (permission.id, permission.model_dump_json()))
             return permission
 
-    def permission(self, id):
+    def permission(self, id, active_only=True):
         with self.connect() as db:
-            row = db.execute("SELECT body FROM permissions WHERE id=? AND active=1", (id,)).fetchone()
+            row = db.execute("SELECT body FROM permissions WHERE id=?" + (" AND active=1" if active_only else ""), (id,)).fetchone()
             return Permission.model_validate_json(row['body']) if row else None
 
     def submit(self, proposal: Proposal):

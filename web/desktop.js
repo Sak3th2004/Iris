@@ -9,7 +9,7 @@ document.querySelector('#toggle-manual').onclick = () => {
   const open = panel.classList.toggle('manual-open');
   document.querySelector('#toggle-manual').textContent = open ? 'Close manual test desks' : 'Open manual test desks';
 };
-let liveJob = null, lastFrame = null, previousState = null;
+let liveJob = null, lastFrame = null, previousState = null, displayedJob = null;
 document.querySelector('#stop-agent').onclick = async () => {
   if (!liveJob) return;
   await busy(document.querySelector('#stop-agent'), async () => {
@@ -22,6 +22,11 @@ async function pollDesktop() {
   try {
     const status = await api('desktop');
     liveJob = status.job;
+    if(liveJob && liveJob.id!==displayedJob && !permission && status.permission){
+      permission=status.permission;
+      renderPermission();
+      displayedJob=liveJob.id;
+    }
     const image = document.querySelector('#vm-frame');
     const empty = document.querySelector('#vm-empty');
     image.hidden = !status.connected;

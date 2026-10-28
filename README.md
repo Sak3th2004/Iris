@@ -8,6 +8,8 @@ Built for the Meta Global AI Developer Hackathon. This repository is new work; S
 
 ## Run locally
 
+For the **live isolated agent**, use the [Docker desktop setup](docs/DOCKER_DESKTOP.md): `docker compose up -d --build`, then open **http://127.0.0.1:8768**. This is the verified deployment. The browser runs inside Docker Desktop's Linux VM on an internal network, and its actual viewport streams to the owner interface. The host-only command below is useful for API/UI development.
+
 Python 3.11 or newer:
 
 ```powershell
@@ -31,13 +33,13 @@ Use **New record** to create invented guests and buyers. The initial Alice/Bob/P
 | Same write endpoint for click, Enter and HTTP | Implemented and tested |
 | Muse Spark 1.3 Standard permission interpretation | One live API interpretation verified locally |
 | Muse Voice Transcribe recording and WAV adapter | Implemented; live microphone/provider path not yet verified |
-| VM-only Playwright worker and separate Spark blind reader | Implemented; unit-tested, no VM end-to-end run yet |
+| Isolated Playwright worker and separate Spark blind reader | Verified with real paid booking and order runs inside Docker Desktop's Linux VM |
 | Baseten Spark Open reader | Not integrated; awaiting credits |
-| Actual VM preview in owner UI | Not yet implemented; current desk is labeled local |
+| Actual isolated-browser preview in owner UI | Live authenticated JPEG frames, freshness checks, action events, and owner stop |
 | Cal.com / Cal.diy write interception | Not integrated; current desks are served by Iris |
 | Held-out three-system results, coffee video, submission | Pending actual VM runs; no fabricated results |
 
-This is a working local foundation, **not a completed hackathon submission**.
+This is a working isolated-agent milestone, **not a completed hackathon submission**. See [actual development-run evidence](docs/DEVELOPMENT_RUNS.md); these runs are not held-out measurements.
 
 ## Permission and persistence
 

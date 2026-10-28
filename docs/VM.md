@@ -1,6 +1,6 @@
 # Isolated browser worker
 
-Status: implemented, **not yet exercised in a VM**. No VM has been provisioned by this project. The local owner desk is not a VM preview.
+The selected and verified deployment is now the [dedicated Docker browser inside Docker Desktop's Linux VM](DOCKER_DESKTOP.md). It streams real browser frames to the owner UI. The instructions below describe an alternative full Linux guest and SSH-forwarding setup, which has **not** been exercised.
 
 The owner service runs on Windows at 127.0.0.1:8765. A separate restricted gateway on 127.0.0.1:8766 exposes records, job claiming, model steps, and gated writes. It has **no permission issuance or record creation routes**. Do not expose the owner port to the VM. The model cannot run shell commands or choose external URLs; its tools are open record, fill field, save, and pause.
 
@@ -18,4 +18,4 @@ The owner service runs on Windows at 127.0.0.1:8765. A separate restricted gatew
 
 The worker checks Linux virtualization using `systemd-detect-virt --vm`, creates a fresh Chromium context, and records its actual browser video in `recordings/`. This runtime check is a guard against accidental host execution, not a security attestation. A job gets at most 12 planner calls. Every attempted agent save invokes a separate blind-reader call that receives only the captured form, not the sentence or planner answer. Disagreement pauses the job; agreement still requires the deterministic gate to allow the write. Baseten is not integrated yet.
 
-Remaining before calling this submission-ready: provision and verify the VM/network rules; run both resources; stream the real VM browser to the owner UI; label and record fault injections separately; test worker interruption/recovery; record held-out runs. The current worker processes one queued job and exits. A paused or expired job requires a new owner permission.
+The Docker worker is persistent and has completed both resource types with live streaming and network-isolation probes. The alternative `worker/run.py` above processes one job and exits. Remaining submission work includes real adversarial runs, broader interruption/recovery checks, Cal integration, voice validation, held-out measurement, and recording. A paused or expired job requires a new owner permission.
