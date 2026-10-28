@@ -44,7 +44,15 @@ class Jobs:
 
     def finish(self,id,state,detail):
         with self.store.connect() as db:
-            db.execute('UPDATE jobs SET state=?,detail=? WHERE id=?',(state,detail,id))
+            db.execute("UPDATE jobs SET state=?,detail=? WHERE id=? AND state='running'",(state,detail,id))
+
+    def stop(self,id):
+        with self.store.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            job=self.get(id,db)
+            if job['state'] not in ('queued','running'): return
+            db.execute("UPDATE jobs SET state='stopped',detail='Stopped by owner. Permission revoked.' WHERE id=?",(id,))
+            db.execute('UPDATE permissions SET active=0 WHERE id=?',(job['permission_id'],))
 
     async def step(self,id,observation,meta):
         with self.store.connect() as db:

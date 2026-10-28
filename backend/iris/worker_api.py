@@ -7,6 +7,7 @@ from .api import ROOT
 from .store import Store
 from .meta import Meta
 from .agent import Jobs
+from .desktop import Desktop, WorkerEvent
 
 def create_worker_app():
     token=os.getenv('IRIS_WORKER_TOKEN','')
@@ -14,6 +15,7 @@ def create_worker_app():
     store=Store(os.getenv('IRIS_DB',str(ROOT/'iris.sqlite')))
     meta=Meta(store)
     jobs=Jobs(store)
+    desktop=Desktop(store)
     app=FastAPI(docs_url=None,redoc_url=None,openapi_url=None)
     @app.middleware('http')
     async def authenticate(request,call_next):
@@ -28,6 +30,21 @@ def create_worker_app():
     def records(): return store.records()
     @app.post('/claim')
     def claim(): return jobs.claim()
+    @app.post('/desktop/frame')
+    async def frame(request:Request):
+        data=bytearray()
+        async for chunk in request.stream():
+            data.extend(chunk)
+            if len(data)>desktop.MAX_FRAME_BYTES: raise HTTPException(413,'Frame too large.')
+        desktop.publish(bytes(data))
+        return {'ok':True}
+    @app.get('/jobs/{id}')
+    def job(id:str): return jobs.get(id)
+    @app.post('/jobs/{id}/events')
+    def event(id:str, body:WorkerEvent):
+        jobs.get(id)
+        desktop.event(id,body.action,body.detail)
+        return {'ok':True}
     @app.post('/jobs/{id}/step')
     async def step(id:str,request:Request): return await jobs.step(id,await request.json(),meta)
     @app.post('/jobs/{id}/write')

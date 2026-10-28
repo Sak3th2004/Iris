@@ -1,0 +1,49 @@
+name: iris
+services:
+  owner:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.api
+    command: [python, -m, uvicorn, iris.api:app, --app-dir, backend, --host, 0.0.0.0, --port, "8765"]
+    env_file: .env
+    environment:
+      IRIS_DB: /data/iris.sqlite
+    ports: ["127.0.0.1:8768:8765"]
+    volumes: [iris-data:/data]
+    networks: [control]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+  gateway:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.api
+    command: [python, -m, uvicorn, iris.worker_api:create_worker_app, --factory, --app-dir, backend, --host, 0.0.0.0, --port, "8766"]
+    env_file: .env
+    environment:
+      IRIS_DB: /data/iris.sqlite
+    volumes: [iris-data:/data]
+    networks: [control, browser]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    depends_on: [owner]
+  browser:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment:
+      IRIS_WORKER_TOKEN: ${IRIS_WORKER_TOKEN:?Set a random worker token in .env}
+    networks: [browser]
+    init: true
+    shm_size: 1gb
+    mem_limit: 2g
+    cpus: 2
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: on-failure:3
+    depends_on: [gateway]
+networks:
+  control: {}
+  browser:
+    internal: true
+volumes:
+  iris-data: {}

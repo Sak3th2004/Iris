@@ -1,0 +1,12 @@
+**
+!pyproject.toml
+!backend/
+!backend/iris/
+!backend/iris/*.py
+!web/
+!web/**
+!worker/
+!worker/desktop_worker.py
+!worker/Dockerfile
+!infra/
+!infra/Dockerfile.api

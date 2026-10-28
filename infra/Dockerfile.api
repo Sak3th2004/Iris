@@ -1,0 +1,9 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml ./
+COPY backend/iris backend/iris
+RUN pip install --no-cache-dir .
+COPY web web
+RUN useradd --uid 10001 --create-home iris && mkdir /data && chown iris /data
+USER iris
+ENV IRIS_DB=/data/iris.sqlite

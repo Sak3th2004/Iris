@@ -4,7 +4,7 @@ from pathlib import Path
 from uuid import uuid4
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import Field
@@ -12,6 +12,7 @@ from .models import Model, Proposal
 from .store import Store
 from .meta import Meta
 from .agent import Jobs
+from .desktop import Desktop
 
 ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / '.env')
@@ -44,6 +45,7 @@ def create_app(path=None):
     store = Store(path or os.getenv('IRIS_DB', str(ROOT / 'iris.sqlite')))
     meta = Meta(store)
     jobs = Jobs(store)
+    desktop = Desktop(store)
     app.state.store = store
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=['127.0.0.1','localhost','testserver'])
 
@@ -74,7 +76,24 @@ def create_app(path=None):
     def run(body:Run):
         if not meta.key: raise ValueError('Connect your Meta API key before starting the agent.')
         if len(os.getenv('IRIS_WORKER_TOKEN',''))<32: raise ValueError('Connect the isolated VM worker first. See docs/VM.md.')
+        if not desktop.status()['connected']: raise ValueError('The VM browser is disconnected. Start the worker before sending a task.')
         return jobs.create(body.permission_id)
+
+    @app.get('/api/desktop')
+    def desktop_status():
+        job = jobs.latest()
+        return desktop.status() | {'job':job,'events':desktop.events(job['id']) if job else []}
+
+    @app.get('/api/desktop/frame')
+    def desktop_frame():
+        frame = desktop.frame()
+        if frame is None: raise HTTPException(503,'No fresh VM browser frame.')
+        return Response(frame,media_type='image/jpeg')
+
+    @app.post('/api/runs/{id}/stop')
+    def stop(id:str):
+        jobs.stop(id)
+        return jobs.get(id)
 
     @app.post('/api/permissions/manual')
     def manual(body:Manual):
