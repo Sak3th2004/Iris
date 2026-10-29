@@ -26,9 +26,18 @@ Actual calls through the Docker browser, not mocked model responses. The permiss
 
 | Resource | Actual saved change | Preserved price | Version | Agent actions | Job duration | Open reader delay |
 | --- | --- | --- | --- | --- | --- | --- |
-| Booking, Mira a76c2d | Monday ? Thursday | $137 | 1 ? 2 | 3 | 17.22 s | 3.008 s |
+| Booking, Mira a76c2d | Monday to Thursday | $137 | 1 ? 2 | 3 | 17.22 s | 3.008 s |
 | Order, Mira 09c273 | Quantity 1 ? 4 | $137 | 1 ? 2 | 3 | 15.16 s | 3.238 s |
 
 [Booking trace](evidence/baseten-booking.json), [order trace](evidence/baseten-order.json). Duration starts after permission compilation. Both tasks completed with the exact database result. Baseten's local cumulative estimate after both reads was $0.006058 against a $10 development allowance; Meta's Docker-database cumulative estimate was $0.153019, including earlier activity. These are application estimates, not provider billing statements.
 
 34 backend tests passed, including separate budgets, concurrent budget reservations, reader timeouts/truncation/invalid output, missing keys, and reader agreement on a wrong record still rejected by the gate. Browser acceptance and actual container network/key isolation checks passed. These development checks do not establish held-out superiority, visual-reader accuracy, or a completed hackathon submission.
+
+
+## Recovery and recording-start versions - 29 October 2026
+
+**Labeled developer fault injection:** the real Iris browser container was stopped after the planner began an order task. The job expired and revoked its permission; a later HTTP write using that permission paused, leaving quantity 1, price $81, version 1. After restarting the browser, a freshly authorized task saved quantity 3, price $81, version 2 in three agent actions. [Recovery trace](evidence/recovery.json). This is not a spontaneous agent mistake.
+
+**Synthesized speech acceptance run:** Windows local speech synthesis fed Chromium's microphone test device. The real AudioWorklet, recording-start snapshot, Meta Voice Transcribe, Spark permission compiler/planner, Baseten reader, and isolated browser completed Tara Benton's booking Monday to Thursday, preserving $194 and advancing version 1 to 2. [Voice trace](evidence/voice-synthetic.json). Transcription repeated two words; the evidence retains the actual transcript. This is not a human microphone recording or the final coffee film.
+
+49 backend tests passed. New checks cover expired queued/running jobs, wrong worker sessions, late reader responses after expiry, atomic rollback when receipt storage fails, legacy successful-save recovery without replay, background expiry without owner polling, single-use voice snapshots, changes during speech, missing/expired captures, and transcription failures. Browser acceptance and deployed network/key isolation also passed. Human microphone/noisy-speech validation and held-out evaluation remain outstanding.

@@ -34,7 +34,8 @@ Use **New record** to create invented guests and buyers. The initial Alice/Bob/P
 | Booking and store-order screens; new invented records | Implemented and browser-tested |
 | Same write endpoint for click, Enter and HTTP | Implemented and tested |
 | Muse Spark 1.3 Standard permission interpretation | One live API interpretation verified locally |
-| Muse Voice Transcribe recording and WAV adapter | Implemented; live microphone/provider path not yet verified |
+| Muse Voice Transcribe and recording-start snapshots | Full browser pipeline verified with labeled synthesized microphone input and live Meta calls; human microphone trial remains |
+| Worker interruption and save recovery | Live container interruption verified; expired leases revoke permission; save, receipt, and completion commit atomically |
 | Isolated Playwright worker and separate Spark blind reader | Verified with real paid booking and order runs inside Docker Desktop's Linux VM |
 | Baseten Spark Open reader | Live booking and order runs verified; separate budget and durable reader evidence; see [Baseten setup](docs/BASETEN.md) |
 | Actual isolated-browser preview in owner UI | Live authenticated JPEG frames, freshness checks, action events, and owner stop |
@@ -45,11 +46,11 @@ This is a working isolated-agent milestone, **not a completed hackathon submissi
 
 ## Permission and persistence
 
-`backend/iris/gate.py` is a pure `decide` function. It knows resource type, record ID, field rules, prohibited operations, and version. `Store.submit` begins an immediate SQLite transaction, loads the server-side permission and current record, calls `decide` exactly once, and updates the record only on `allow`. It consumes successful permissions, invalidates stale permissions, records before/after snapshots, and commits the change and audit together. JSON types are compared strictly.
+`backend/iris/gate.py` is a pure `decide` function. It knows resource type, record ID, field rules, prohibited operations, and version. `Store.submit` begins an immediate SQLite transaction, loads the server-side permission and current record, calls `decide` exactly once, and updates the record only on `allow`. It consumes successful permissions, invalidates stale permissions, records before/after snapshots, and commits the change and audit together. Agent saves also commit the durable receipt and completed job state in that same transaction. Expired worker leases are checked inside every write transaction; an in-flight reader cannot save after its lease expires. JSON types are compared strictly.
 
-An exact write can include unchanged form fields. An unauthorized extra change, wrong record, forbidden operation, or wrong version cannot save. A missing or consumed permission pauses. A version is captured before Spark interprets a sentence and checked again when locking the permission.
+An exact write can include unchanged form fields. An unauthorized extra change, wrong record, forbidden operation, or wrong version cannot save. A missing or consumed permission pauses. A version is captured before Spark interprets a typed sentence, or before audio collection for speech, and checked again when locking the permission.
 
-The current product editors support booking-day and order-quantity instructions. Other fields are preserved. This is an explicit application scope; the underlying gate supports arbitrary field rules. Full dates/time zones and broader edit schemas remain work before a production scheduling integration. Spoken instructions currently lock against the snapshot at interpretation, not at recording start; capture-time snapshot binding remains to be implemented.
+The current product editors support booking-day and order-quantity instructions. Other fields are preserved. This is an explicit application scope; the underlying gate supports arbitrary field rules. Full dates/time zones and broader edit schemas remain work before a production scheduling integration. Spoken instructions use a server-side snapshot captured before audio collection. Transcript corrections retain that snapshot; an explicit `Use as a new typed instruction` action starts a new typed instruction instead. Snapshots expire after ten minutes and are consumed atomically when the permission is locked. A record changed during speech or review cannot silently receive renewed authorization.
 
 ## Meta usage and budget
 
@@ -75,4 +76,4 @@ python scripts/browser_check.py
 
 The browser check uses an isolated temporary database and real browser interactions: wrong record, protected-price fault, Enter save, a newly created buyer and order, mobile overflow, and browser errors. It is a software acceptance test, not an autonomous agent evaluation. `scripts/check_meta.py` makes one bounded **paid** live parser call; it never prints the key.
 
-See [architecture and delivery order](docs/ARCHITECTURE.md), [evaluation protocol](docs/EVALUATION.md), [Cal integration assessment](docs/CAL_INTEGRATION.md), and [submission draft](docs/SUBMISSION.md). Do not claim measured superiority or a completed recording until those artifacts exist.
+See [recovery and voice guarantees](docs/RECOVERY_AND_VOICE.md), [architecture and delivery order](docs/ARCHITECTURE.md), [evaluation protocol](docs/EVALUATION.md), [Cal integration assessment](docs/CAL_INTEGRATION.md), and [submission draft](docs/SUBMISSION.md). Do not claim measured superiority or a completed recording until those artifacts exist.

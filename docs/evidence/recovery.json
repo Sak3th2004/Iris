@@ -1,0 +1,184 @@
+{
+  "label": "Developer fault injection: browser container stopped during live task; not an agent mistake",
+  "before": {
+    "resource_type": "order",
+    "record_id": "or-15edc8e3-d98",
+    "fields": {
+      "name": "Recovery 2c0923",
+      "price": 81,
+      "item": "Invented paper lamp",
+      "quantity": 1
+    },
+    "version": 1
+  },
+  "interrupted": {
+    "job": {
+      "id": "19349d85-d779-4b2d-a70e-1d07f51d18fe",
+      "permission_id": "923ed0c4-8df4-42b9-ba95-e62ff8809230",
+      "state": "paused",
+      "steps": 1,
+      "detail": "Worker lease expired. Permission revoked; no saved write found. Review and authorize again."
+    },
+    "receipt": null,
+    "reader_checks": [],
+    "events": [
+      {
+        "id": 55,
+        "job_id": "19349d85-d779-4b2d-a70e-1d07f51d18fe",
+        "action": "observing",
+        "detail": "Reading the current browser form.",
+        "received": 1793282853.7585418
+      }
+    ]
+  },
+  "expired_permission_attempt": {
+    "decision": {
+      "verdict": "pause",
+      "code": "permission_missing",
+      "reason": "A locked permission is required before saving."
+    },
+    "before": {
+      "resource_type": "order",
+      "record_id": "or-15edc8e3-d98",
+      "fields": {
+        "name": "Recovery 2c0923",
+        "price": 81,
+        "item": "Invented paper lamp",
+        "quantity": 1
+      },
+      "version": 1
+    },
+    "after": {
+      "resource_type": "order",
+      "record_id": "or-15edc8e3-d98",
+      "fields": {
+        "name": "Recovery 2c0923",
+        "price": 81,
+        "item": "Invented paper lamp",
+        "quantity": 1
+      },
+      "version": 1
+    }
+  },
+  "fresh_authorization_run": {
+    "job": {
+      "id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+      "permission_id": "f76f1684-adad-4fb3-8425-99c7938eefba",
+      "state": "complete",
+      "steps": 3,
+      "detail": "Exact authorized change. Saved and read back."
+    },
+    "receipt": {
+      "decision": {
+        "verdict": "allow",
+        "code": "exact_write",
+        "reason": "Exact authorized change. Saved and read back."
+      },
+      "before": {
+        "resource_type": "order",
+        "record_id": "or-15edc8e3-d98",
+        "fields": {
+          "name": "Recovery 2c0923",
+          "price": 81,
+          "item": "Invented paper lamp",
+          "quantity": 1
+        },
+        "version": 1
+      },
+      "after": {
+        "resource_type": "order",
+        "record_id": "or-15edc8e3-d98",
+        "fields": {
+          "name": "Recovery 2c0923",
+          "price": 81,
+          "item": "Invented paper lamp",
+          "quantity": 3
+        },
+        "version": 2
+      }
+    },
+    "reader_checks": [
+      {
+        "id": 3,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "provider": "Baseten",
+        "model": "meta-models/muse-spark-open-1026",
+        "outcome": "agree",
+        "elapsed_ms": 2842,
+        "form": {
+          "resource_type": "order",
+          "record_id": "or-15edc8e3-d98",
+          "fields": {
+            "name": "Recovery 2c0923",
+            "price": 81,
+            "item": "Invented paper lamp",
+            "quantity": 3
+          },
+          "version": 1
+        },
+        "answer": {
+          "resource_type": "order",
+          "record_id": "or-15edc8e3-d98",
+          "version": 1,
+          "fields": {
+            "name": "Recovery 2c0923",
+            "price": 81,
+            "item": "Invented paper lamp",
+            "quantity": 3
+          }
+        }
+      }
+    ],
+    "events": [
+      {
+        "id": 62,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "action": "allow",
+        "detail": "Exact authorized change. Saved and read back.",
+        "received": 1793282903.5333605
+      },
+      {
+        "id": 61,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "action": "reviewing",
+        "detail": "Independent reader is inspecting the form before the write gate.",
+        "received": 1793282898.7724736
+      },
+      {
+        "id": 60,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "action": "observing",
+        "detail": "Reading the current browser form.",
+        "received": 1793282894.7693362
+      },
+      {
+        "id": 59,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "action": "filled",
+        "detail": "Set quantity to 3.",
+        "received": 1793282894.7391624
+      },
+      {
+        "id": 58,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "action": "observing",
+        "detail": "Reading the current browser form.",
+        "received": 1793282890.07279
+      },
+      {
+        "id": 57,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "action": "opened",
+        "detail": "Opened record or-15edc8e3-d98.",
+        "received": 1793282890.0486655
+      },
+      {
+        "id": 56,
+        "job_id": "386f95dc-d54e-4f67-8fda-f9cdf5f1d231",
+        "action": "observing",
+        "detail": "Reading the current browser form.",
+        "received": 1793282881.0167031
+      }
+    ]
+  }
+}

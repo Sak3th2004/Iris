@@ -13,9 +13,9 @@ The owner service runs on Windows at 127.0.0.1:8765. A separate restricted gatew
    ```
 
 4. From the host, forward **only** the gateway to the VM with `ssh -R 8766:127.0.0.1:8766 user@VM_IP`. Configure the VM network/firewall to deny access to the owner's port and other host services. Restrict VM egress to the gateway. Verify those rules before running the worker. The browser route allowlist is defense in depth, not a replacement for network isolation.
-5. Copy only `worker/run.py` into the VM. Install `httpx` and `playwright` there, and run `python -m playwright install --with-deps chromium`.
+5. Copy `worker/run.py` and `worker/desktop_worker.py` into the VM. Install `httpx` and `playwright` there, and run `python -m playwright install --with-deps chromium`.
 6. Lock a permission in the owner UI, then choose **Send to agent**. Inside the VM graphical session run `python run.py`.
 
 The worker checks Linux virtualization using `systemd-detect-virt --vm`, creates a fresh Chromium context, and records its actual browser video in `recordings/`. This runtime check is a guard against accidental host execution, not a security attestation. A job gets at most 12 planner calls. Every attempted agent save invokes a separate blind-reader call that receives only the captured form, not the sentence or planner answer. Disagreement pauses the job; agreement still requires the deterministic gate to allow the write. The gateway now defaults to the Baseten Open reader; see [configuration](BASETEN.md).
 
-The Docker worker is persistent and has completed both resource types with live streaming and network-isolation probes. The alternative `worker/run.py` above processes one job and exits. Remaining submission work includes real adversarial runs, broader interruption/recovery checks, Cal integration, voice validation, held-out measurement, and recording. A paused or expired job requires a new owner permission.
+The Docker worker is persistent and has completed both resource types with live streaming and network-isolation probes. The alternative `worker/run.py` shares the persistent worker and heartbeat protocol; its full-VM deployment remains unverified. Remaining submission work includes real adversarial runs, Cal integration, human microphone validation, held-out measurement, and recording. A paused or expired job requires a new owner permission.

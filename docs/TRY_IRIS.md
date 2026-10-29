@@ -9,6 +9,6 @@
 
 The browser is deliberately inside the interface: it is a read-only window into the separate execution environment. You do not click inside the image to operate it. The **manual test desks** are separate owner controls for setting up invented data and exercising fault cases.
 
-**Build status** lists verified capabilities and unfinished submission work. The core loop has completed booking and order tasks. Cal.diy interception, voice end-to-end verification, adversarial browser trials, held-out measurement, recovery hardening and the final video remain. Baseten Spark Open is now the default independent reader and requires BASETEN_API_KEY; see [setup](BASETEN.md). Meta still supplies the parser and planner.
+**Build status** lists verified capabilities and unfinished submission work. The core loop has completed booking and order tasks. Worker interruption recovery and a full voice pipeline using synthesized test speech have now passed. Human microphone recording, Cal.diy interception, adversarial browser trials, held-out measurement and the final video remain. Baseten Spark Open is now the default independent reader and requires BASETEN_API_KEY; see [setup](BASETEN.md). Meta still supplies the parser and planner.
 
 The stack already uses open-source FastAPI, SQLite, Playwright and container tooling. Additional packages are chosen to solve a demonstrated problem, not to inflate the feature count. No extra API key or installation is required to try the current running build.

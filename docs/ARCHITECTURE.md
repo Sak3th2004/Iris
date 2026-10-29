@@ -37,8 +37,8 @@ The desktop is a container inside Docker Desktop's Linux VM, not a new VirtualBo
 ## Remaining work, in order
 
 1. **Completed 29 October:** Open reader verified in actual booking and order browser runs; evidence retained under `docs/evidence/baseten-*.json`. These are development checks, not held-out results.
-2. Harden interrupted jobs: heartbeat/lease expiry, safe recovery, and regression tests for worker loss. Never resume an uncertain write blindly; check the receipt first.
-3. Bind spoken permissions to a snapshot captured before recording, then validate real microphone → transcription → permission → browser → receipt.
+2. **Completed 29 October:** worker session leases, independent heartbeats, expiry/revocation, atomic job receipts, and a live container-interruption trial. Recovery reconciles saved receipts without replaying writes.
+3. **Implemented and exercised 29 October:** recording-start snapshots and the full AudioWorklet, Meta transcription, permission, browser, and receipt pipeline using labeled synthesized microphone input. A human microphone recording is still required for the film.
 4. Run labeled adversarial browser trials: wrong person, price mutation, stale record, ambiguous instruction, and stopped/in-flight saves.
 5. Freeze held-out tasks and compare agent alone, a button-only reviewer, and Iris. Report unauthorized saves, legitimate completion, false blocks, and delay. No superiority claim before measurement.
 6. Evaluate Cal.diy interception against its actual transaction path. Keep Iris-owned desks if that boundary cannot be enforced within the submission window; disclose this clearly.

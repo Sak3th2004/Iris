@@ -1,0 +1,143 @@
+{
+  "label": "Synthesized speech injected through Chromium microphone test device; real AudioWorklet, Meta transcription, parser, planner, Baseten reader, and database write",
+  "fixture_sentence": "Move Tara Benton's booking to Thursday. Keep the price and every other record unchanged.",
+  "transcript": "Move Tara Benton's booking booking to Thursday. Keep the price and every other record unchanged. unchanged.",
+  "capture_id": "66a719cb-6170-4fc5-b787-75a9056a5099",
+  "before": {
+    "resource_type": "booking",
+    "record_id": "bk-2e1664b6-a3e",
+    "fields": {
+      "name": "Tara Benton",
+      "price": 194,
+      "day": "Monday",
+      "time": "10:00",
+      "service": "Invented studio review"
+    },
+    "version": 1
+  },
+  "result": {
+    "job": {
+      "id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+      "permission_id": "2aa7c148-d62f-447f-8e14-a7509c168e85",
+      "state": "complete",
+      "steps": 3,
+      "detail": "Exact authorized change. Saved and read back."
+    },
+    "receipt": {
+      "decision": {
+        "verdict": "allow",
+        "code": "exact_write",
+        "reason": "Exact authorized change. Saved and read back."
+      },
+      "before": {
+        "resource_type": "booking",
+        "record_id": "bk-2e1664b6-a3e",
+        "fields": {
+          "name": "Tara Benton",
+          "price": 194,
+          "day": "Monday",
+          "time": "10:00",
+          "service": "Invented studio review"
+        },
+        "version": 1
+      },
+      "after": {
+        "resource_type": "booking",
+        "record_id": "bk-2e1664b6-a3e",
+        "fields": {
+          "name": "Tara Benton",
+          "price": 194,
+          "day": "Thursday",
+          "time": "10:00",
+          "service": "Invented studio review"
+        },
+        "version": 2
+      }
+    },
+    "reader_checks": [
+      {
+        "id": 4,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "provider": "Baseten",
+        "model": "meta-models/muse-spark-open-1026",
+        "outcome": "agree",
+        "elapsed_ms": 2162,
+        "form": {
+          "resource_type": "booking",
+          "record_id": "bk-2e1664b6-a3e",
+          "fields": {
+            "name": "Tara Benton",
+            "price": 194,
+            "day": "Thursday",
+            "time": "10:00",
+            "service": "Invented studio review"
+          },
+          "version": 1
+        },
+        "answer": {
+          "resource_type": "booking",
+          "record_id": "bk-2e1664b6-a3e",
+          "version": 1,
+          "fields": {
+            "name": "Tara Benton",
+            "price": 194,
+            "day": "Thursday",
+            "time": "10:00",
+            "service": "Invented studio review"
+          }
+        }
+      }
+    ],
+    "events": [
+      {
+        "id": 69,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "action": "allow",
+        "detail": "Exact authorized change. Saved and read back.",
+        "received": 1793283011.5591214
+      },
+      {
+        "id": 68,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "action": "reviewing",
+        "detail": "Independent reader is inspecting the form before the write gate.",
+        "received": 1793283008.9837213
+      },
+      {
+        "id": 67,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "action": "observing",
+        "detail": "Reading the current browser form.",
+        "received": 1793283005.7425365
+      },
+      {
+        "id": 66,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "action": "filled",
+        "detail": "Set day to Thursday.",
+        "received": 1793283005.686668
+      },
+      {
+        "id": 65,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "action": "observing",
+        "detail": "Reading the current browser form.",
+        "received": 1793283002.4710267
+      },
+      {
+        "id": 64,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "action": "opened",
+        "detail": "Opened record bk-2e1664b6-a3e.",
+        "received": 1793283002.4472463
+      },
+      {
+        "id": 63,
+        "job_id": "ab84b7b0-591f-4226-bda8-a247b46e3484",
+        "action": "observing",
+        "detail": "Reading the current browser form.",
+        "received": 1793283000.7483037
+      }
+    ]
+  }
+}

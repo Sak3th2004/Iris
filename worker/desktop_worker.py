@@ -3,15 +3,24 @@ import asyncio
 import contextlib
 import os
 import platform
+import subprocess
+from uuid import uuid4
 from pathlib import Path
 import httpx
 from playwright.async_api import async_playwright
 
-async def main():
-    if platform.system() != 'Linux' or not Path('/.dockerenv').exists():
-        raise SystemExit('Run inside the dedicated Iris Docker container, never on the host.')
-    base = 'http://gateway:8766'
-    headers = {'Authorization':f"Bearer {os.environ['IRIS_WORKER_TOKEN']}"}
+async def main(runtime='docker'):
+    if platform.system() != 'Linux':
+        raise SystemExit('The worker must run inside Linux isolation, never the Windows host.')
+    if runtime == 'docker':
+        if not Path('/.dockerenv').exists(): raise SystemExit('Run inside the dedicated Iris Docker container.')
+        base = 'http://gateway:8766'
+    elif runtime == 'vm':
+        if subprocess.run(['systemd-detect-virt','--vm'],capture_output=True).returncode:
+            raise SystemExit('No supported Linux virtual machine detected.')
+        base = 'http://127.0.0.1:8766'
+    else: raise SystemExit('Unsupported worker runtime.')
+    headers = {'Authorization':f"Bearer {os.environ['IRIS_WORKER_TOKEN']}",'X-Iris-Worker-ID':str(uuid4())}
     async with httpx.AsyncClient(base_url=base,headers=headers,timeout=100) as client:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=False)
@@ -21,6 +30,13 @@ async def main():
                 else: await route.abort()
             await context.route('**/*',restrict)
             page = await context.new_page()
+            for attempt in range(30):
+                try:
+                    response=await client.get('/records',timeout=5)
+                    response.raise_for_status()
+                    break
+                except httpx.HTTPError: await asyncio.sleep(2)
+            else: raise RuntimeError('Gateway did not become ready.')
             await page.goto(base+'/')
             await page.locator('[data-record]').first.wait_for()
             async def frames():
@@ -34,6 +50,15 @@ async def main():
             async def event(id,action,detail):
                 response = await client.post(f'/jobs/{id}/events',json={'action':action,'detail':str(detail)[:300]})
                 response.raise_for_status()
+            async def heartbeat(id,lost):
+                while True:
+                    try:
+                        response=await client.post(f'/jobs/{id}/heartbeat',timeout=5)
+                        response.raise_for_status()
+                    except httpx.HTTPError:
+                        lost.set()
+                        return  # Never resume an uncertain task on reconnection.
+                    await asyncio.sleep(3)
             async def click(locator):
                 await page.evaluate("document.querySelectorAll('[data-iris-active]').forEach(el=>el.removeAttribute('data-iris-active'))")
                 await locator.evaluate("el=>el.setAttribute('data-iris-active','true')")
@@ -45,20 +70,27 @@ async def main():
             print('Isolated browser ready; streaming real frames. Waiting for permission.',flush=True)
             try:
                 while True:
-                    response = await client.post('/claim'); response.raise_for_status(); job = response.json()
+                    try:
+                        response = await client.post('/claim',timeout=5); response.raise_for_status(); job = response.json()
+                    except httpx.HTTPError:
+                        await asyncio.sleep(2); continue  # Polling is safe; model/write requests are never retried.
                     if not job:
                         await asyncio.sleep(1); continue
                     id = job['id']
+                    lost=asyncio.Event()
+                    pulse=asyncio.create_task(heartbeat(id,lost))
                     try:
                         await page.reload()
                         await page.locator('[data-record]').first.wait_for()
                         await page.evaluate('(id)=>job=id',id)
                         for step in range(12):
+                            if lost.is_set(): raise ValueError('Worker connection lost.')
                             status = await client.get(f'/jobs/{id}'); status.raise_for_status()
                             if status.json()['state'] != 'running': break
                             observation = await page.evaluate('({records,open_form:capture()})')
                             await event(id,'observing','Reading the current browser form.')
                             response = await client.post(f'/jobs/{id}/step',json=observation);response.raise_for_status();action=response.json()
+                            if lost.is_set(): raise ValueError('Worker connection lost during model call.')
                             status = await client.get(f'/jobs/{id}');status.raise_for_status()
                             if status.json()['state'] != 'running': break
                             kind = action.get('action')
@@ -88,8 +120,12 @@ async def main():
                         else: await client.post(f'/jobs/{id}/pause')
                     except Exception as exc:
                         print(f'Task stopped: {type(exc).__name__}',flush=True)
-                        await event(id,'error',f'{type(exc).__name__}: worker stopped; no automatic model retry.')
-                        await client.post(f'/jobs/{id}/pause')
+                        with contextlib.suppress(httpx.HTTPError):
+                            await event(id,'error',f'{type(exc).__name__}: worker stopped; no automatic model retry.')
+                            await client.post(f'/jobs/{id}/pause',timeout=5)
+                    finally:
+                        pulse.cancel()
+                        with contextlib.suppress(asyncio.CancelledError): await pulse
             finally:
                 stream.cancel()
                 with contextlib.suppress(asyncio.CancelledError): await stream

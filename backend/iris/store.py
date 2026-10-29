@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from .gate import decide
 from .models import Permission, Proposal, Record
+from .lifecycle import recover_jobs, owns_lease
+from .capture import Captures
 
 SEED = [
     ("booking", "bk-alice", {"name": "Alice Morgan", "day": "Tuesday", "time": "10:00", "service": "Design consultation", "price": 120}),
@@ -26,6 +28,10 @@ class Store:
                 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT, proposal TEXT, decision TEXT, before_row TEXT, after_row TEXT);
                 CREATE TABLE IF NOT EXISTS spend(id TEXT PRIMARY KEY, reserved REAL NOT NULL, actual REAL, purpose TEXT);
                 CREATE TABLE IF NOT EXISTS baseten_spend(id TEXT PRIMARY KEY, reserved REAL NOT NULL, actual REAL, purpose TEXT);
+                CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY, permission_id TEXT, state TEXT, steps INTEGER DEFAULT 0, detail TEXT);
+                CREATE TABLE IF NOT EXISTS job_leases(job_id TEXT PRIMARY KEY, worker_id TEXT, expires_at REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS job_receipts(job_id TEXT PRIMARY KEY, body TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS instruction_captures(id TEXT PRIMARY KEY, records TEXT NOT NULL, captured_at REAL NOT NULL, expires_at REAL NOT NULL, state TEXT NOT NULL, transcript TEXT);
             ''')
             for resource, id, fields in SEED:
                 db.execute("INSERT OR IGNORE INTO records VALUES(?,?,?,1)", (resource, id, json.dumps(fields)))
@@ -59,7 +65,7 @@ class Store:
             db.execute('INSERT INTO records VALUES(?,?,?,1)', (resource,id,json.dumps(fields)))
             return self._get(db,resource,id)
 
-    def lock(self, sentence, resource, id, fields, version):
+    def lock(self, sentence, resource, id, fields, version, *, capture_id=None):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = self._get(db, resource, id)
@@ -67,6 +73,8 @@ class Store:
                 raise ValueError("Record changed while interpreting the instruction. Please ask again.")
             if not fields or any(k not in row.fields or type(v) is not type(row.fields[k]) for k,v in fields.items()):
                 raise ValueError("The instruction must specify valid fields and values.")
+            if capture_id:
+                Captures(self).consume(capture_id,resource,id,version,db)
             permission = Permission(id=str(uuid4()), sentence=sentence, resource_type=resource, record_id=id, set_fields=fields,
                 preserve_fields={k:v for k,v in row.fields.items() if k not in fields},
                 forbidden_operations=["delete", "cancel", "email", "message", "create"], version=version)
@@ -78,11 +86,15 @@ class Store:
             row = db.execute("SELECT body FROM permissions WHERE id=?" + (" AND active=1" if active_only else ""), (id,)).fetchone()
             return Permission.model_validate_json(row['body']) if row else None
 
-    def submit(self, proposal: Proposal):
+    def submit(self, proposal: Proposal, *, job_id=None, worker_id=None):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            recover_jobs(db)
             p = db.execute("SELECT body FROM permissions WHERE id=? AND active=1", (proposal.permission_id,)).fetchone()
             permission = Permission.model_validate_json(p['body']) if p else None
+            bound = db.execute('SELECT id FROM jobs WHERE permission_id=? LIMIT 1', (proposal.permission_id,)).fetchone()
+            if bound and (bound['id'] != job_id or not owns_lease(db, job_id, worker_id)):
+                permission = None  # Every transport must respect an assigned worker lease.
             before = self._get(db, proposal.resource_type, proposal.record_id)
             decision = decide(permission, proposal, before)  # Exactly one decision, inside the write transaction.
             if decision.verdict == "allow":
@@ -94,7 +106,14 @@ class Store:
             db.execute("INSERT INTO audit(time,proposal,decision,before_row,after_row) VALUES(?,?,?,?,?)", (
                 datetime.now(timezone.utc).isoformat(), proposal.model_dump_json(), decision.model_dump_json(),
                 before.model_dump_json() if before else 'null', after.model_dump_json() if after else 'null'))
-            return {"decision": decision.model_dump(), "before": before.model_dump() if before else None, "after": after.model_dump() if after else None}
+            result = {"decision": decision.model_dump(), "before": before.model_dump() if before else None, "after": after.model_dump() if after else None}
+            if job_id and bound and bound['id'] == job_id:
+                if decision.verdict == 'allow':
+                    db.execute('INSERT INTO job_receipts VALUES(?,?)', (job_id,json.dumps(result)))
+                    db.execute("UPDATE jobs SET state='complete',detail=? WHERE id=?", (decision.reason,job_id))
+                elif decision.code == 'stale_version':
+                    db.execute("UPDATE jobs SET state='paused',detail=? WHERE id=? AND state='running'", (decision.reason,job_id))
+            return result
 
     def audit(self):
         with self.connect() as db:
