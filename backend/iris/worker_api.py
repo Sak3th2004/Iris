@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from .api import ROOT
 from .store import Store
 from .meta import Meta
+from .reader import create_reader
 from .agent import Jobs
 from .desktop import Desktop, WorkerEvent
 
@@ -14,6 +15,7 @@ def create_worker_app():
     if len(token)<32: raise RuntimeError('Set a random IRIS_WORKER_TOKEN of at least 32 characters before starting the worker gateway.')
     store=Store(os.getenv('IRIS_DB',str(ROOT/'iris.sqlite')))
     meta=Meta(store)
+    reader=create_reader(store)
     jobs=Jobs(store)
     desktop=Desktop(store)
     app=FastAPI(docs_url=None,redoc_url=None,openapi_url=None)
@@ -48,7 +50,7 @@ def create_worker_app():
     @app.post('/jobs/{id}/step')
     async def step(id:str,request:Request): return await jobs.step(id,await request.json(),meta)
     @app.post('/jobs/{id}/write')
-    async def write(id:str,request:Request): return await jobs.submit(id,await request.json(),meta)
+    async def write(id:str,request:Request): return await jobs.submit(id,await request.json(),reader)
     @app.post('/jobs/{id}/pause')
     async def pause(id:str): jobs.finish(id,'paused','Worker stopped. Check the VM and lock a new permission to retry.'); return {'ok':True}
     return app

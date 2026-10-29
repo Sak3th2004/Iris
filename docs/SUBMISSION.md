@@ -8,7 +8,7 @@ Iris addresses a practical failure in delegated browser work: the agent can clic
 
 New work in this repository: permission schema and gate, transactional SQLite ledger, two owned resource desks, permission UI, Meta adapters, independent-reader service, isolated Docker browser worker, live browser-frame transport, and transactional owner stop. Real paid booking and order tasks have completed in Docker Desktop's Linux VM. Cal integration, adversarial end-to-end validation, held-out evaluation, and submission recording remain pending. Describe the stream precisely as the isolated browser viewport, not an entire Windows or Linux desktop.
 
-Meta's roles: Muse Voice Transcribe captures the sentence; Muse Spark interprets it and selects browser actions; a separate Spark prompt independently reads the form. The deterministic gate enforces the permission. Spark Open is planned for the blind reader when credits arrive; no open-weights bonus claim yet. SAM is intentionally excluded unless measured benefit justifies it.
+Meta's roles: Muse Voice Transcribe captures the sentence; Muse Spark interprets it and selects browser actions; Muse Spark Open on Baseten independently reads the form. The deterministic gate enforces the permission. The Open reader is integrated using the hackathon model ID; retain actual-run evidence for the open-weights submission. SAM is intentionally excluded unless measured benefit justifies it.
 
 Three-minute recording plan, to be filmed only after actual VM runs:
 

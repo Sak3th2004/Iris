@@ -20,6 +20,7 @@ code='''
 import os,socket,json,sys
 targets=[('gateway','gateway',8766,True),('public internet','1.1.1.1',443,False),('host owner','host.docker.internal',8768,False),('old host server','host.docker.internal',8765,False),('owner container',sys.argv[1],8765,False)]
 assert not os.getenv('MODEL_API_KEY'), 'Provider key leaked to browser'
+assert not os.getenv('BASETEN_API_KEY'), 'Reader key leaked to browser'
 assert not os.path.exists('/var/run/docker.sock')
 results=[]
 for label,host,port,expected in targets:

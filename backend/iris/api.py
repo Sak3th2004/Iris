@@ -11,6 +11,7 @@ from pydantic import Field
 from .models import Model, Proposal
 from .store import Store
 from .meta import Meta
+from .reader import create_reader
 from .agent import Jobs
 from .desktop import Desktop
 
@@ -44,6 +45,7 @@ def create_app(path=None):
     app = FastAPI(title='Iris · Permission at the write')
     store = Store(path or os.getenv('IRIS_DB', str(ROOT / 'iris.sqlite')))
     meta = Meta(store)
+    reader = create_reader(store)
     jobs = Jobs(store)
     desktop = Desktop(store)
     app.state.store = store
@@ -70,11 +72,12 @@ def create_app(path=None):
 
     @app.get('/api/state')
     def state():
-        return {'records':store.records(), 'audit':store.audit(), 'meta':meta.status(), 'agent':{'job':jobs.latest()}}
+        return {'records':store.records(), 'audit':store.audit(), 'meta':meta.status(), 'reader':reader.status(), 'agent':{'job':jobs.latest()}}
 
     @app.post('/api/runs')
     def run(body:Run):
         if not meta.key: raise ValueError('Connect your Meta API key before starting the agent.')
+        if not reader.key: raise ValueError(f'Add {reader.key_variable} to .env and recreate owner and gateway before starting the agent.')
         if len(os.getenv('IRIS_WORKER_TOKEN',''))<32: raise ValueError('Connect the isolated VM worker first. See docs/VM.md.')
         if not desktop.status()['connected']: raise ValueError('The VM browser is disconnected. Start the worker before sending a task.')
         return jobs.create(body.permission_id)
@@ -83,7 +86,7 @@ def create_app(path=None):
     def desktop_status():
         job = jobs.latest()
         permission = store.permission(job['permission_id'],active_only=False) if job else None
-        return desktop.status() | {'job':job,'permission':permission.model_dump() if permission else None,'events':desktop.events(job['id']) if job else []}
+        return desktop.status() | {'job':job,'permission':permission.model_dump() if permission else None,'events':desktop.events(job['id']) if job else [],'reader_checks':jobs.checks(job['id']) if job else []}
 
     @app.get('/api/desktop/frame')
     def desktop_frame():

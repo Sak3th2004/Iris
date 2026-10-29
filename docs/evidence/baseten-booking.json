@@ -1,0 +1,210 @@
+{
+  "sentence": "Move Mira a76c2d's booking to Thursday. Keep the price and all other records unchanged.",
+  "permission": {
+    "id": "edf525f0-4dd9-4a3d-b07c-5424dc2fa80b",
+    "sentence": "Move Mira a76c2d's booking to Thursday. Keep the price and all other records unchanged.",
+    "resource_type": "booking",
+    "record_id": "bk-80a2f137-d20",
+    "set_fields": {
+      "day": "Thursday"
+    },
+    "preserve_fields": {
+      "name": "Mira a76c2d",
+      "price": 137,
+      "time": "10:00",
+      "service": "Studio consultation"
+    },
+    "forbidden_operations": [
+      "delete",
+      "cancel",
+      "email",
+      "message",
+      "create"
+    ],
+    "version": 1
+  },
+  "job": {
+    "id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+    "permission_id": "edf525f0-4dd9-4a3d-b07c-5424dc2fa80b",
+    "state": "complete",
+    "steps": 3,
+    "detail": "Exact authorized change. Saved and read back."
+  },
+  "events": [
+    {
+      "id": 47,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "action": "allow",
+      "detail": "Exact authorized change. Saved and read back.",
+      "received": 1793281459.27731
+    },
+    {
+      "id": 46,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "action": "reviewing",
+      "detail": "Independent reader is inspecting the form before the write gate.",
+      "received": 1793281455.868003
+    },
+    {
+      "id": 45,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "action": "observing",
+      "detail": "Reading the current browser form.",
+      "received": 1793281449.1501873
+    },
+    {
+      "id": 44,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "action": "filled",
+      "detail": "Set day to Thursday.",
+      "received": 1793281449.1310797
+    },
+    {
+      "id": 43,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "action": "observing",
+      "detail": "Reading the current browser form.",
+      "received": 1793281445.2998874
+    },
+    {
+      "id": 42,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "action": "opened",
+      "detail": "Opened record bk-80a2f137-d20.",
+      "received": 1793281445.275447
+    },
+    {
+      "id": 41,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "action": "observing",
+      "detail": "Reading the current browser form.",
+      "received": 1793281441.962812
+    }
+  ],
+  "before": {
+    "resource_type": "booking",
+    "record_id": "bk-80a2f137-d20",
+    "fields": {
+      "name": "Mira a76c2d",
+      "price": 137,
+      "day": "Monday",
+      "time": "10:00",
+      "service": "Studio consultation"
+    },
+    "version": 1
+  },
+  "after": {
+    "resource_type": "booking",
+    "record_id": "bk-80a2f137-d20",
+    "fields": {
+      "name": "Mira a76c2d",
+      "price": 137,
+      "day": "Thursday",
+      "time": "10:00",
+      "service": "Studio consultation"
+    },
+    "version": 2
+  },
+  "audit": [
+    {
+      "id": 5,
+      "time": "2026-10-29T13:44:19.252353+00:00",
+      "proposal": {
+        "permission_id": "edf525f0-4dd9-4a3d-b07c-5424dc2fa80b",
+        "resource_type": "booking",
+        "record_id": "bk-80a2f137-d20",
+        "operation": "update",
+        "fields": {
+          "name": "Mira a76c2d",
+          "price": 137,
+          "day": "Thursday",
+          "time": "10:00",
+          "service": "Studio consultation"
+        },
+        "version": 1,
+        "channel": "click",
+        "origin": "agent"
+      },
+      "decision": {
+        "verdict": "allow",
+        "code": "exact_write",
+        "reason": "Exact authorized change. Saved and read back."
+      },
+      "before_row": {
+        "resource_type": "booking",
+        "record_id": "bk-80a2f137-d20",
+        "fields": {
+          "name": "Mira a76c2d",
+          "price": 137,
+          "day": "Monday",
+          "time": "10:00",
+          "service": "Studio consultation"
+        },
+        "version": 1
+      },
+      "after_row": {
+        "resource_type": "booking",
+        "record_id": "bk-80a2f137-d20",
+        "fields": {
+          "name": "Mira a76c2d",
+          "price": 137,
+          "day": "Thursday",
+          "time": "10:00",
+          "service": "Studio consultation"
+        },
+        "version": 2
+      }
+    }
+  ],
+  "seconds": 17.2190000000046,
+  "meta": {
+    "configured": true,
+    "committed_usd": 0.13796,
+    "limit_usd": 149.99,
+    "model": "muse-spark-1.3",
+    "provider": "Meta",
+    "mode": "Standard"
+  },
+  "reader": {
+    "configured": true,
+    "committed_usd": 0.002322,
+    "limit_usd": 10.0,
+    "model": "meta-models/muse-spark-open-1026",
+    "provider": "Baseten",
+    "mode": "Open weights"
+  },
+  "reader_checks": [
+    {
+      "id": 1,
+      "job_id": "2b8c972f-a931-41c5-84df-9733b90933f8",
+      "provider": "Baseten",
+      "model": "meta-models/muse-spark-open-1026",
+      "outcome": "agree",
+      "elapsed_ms": 3008,
+      "form": {
+        "resource_type": "booking",
+        "record_id": "bk-80a2f137-d20",
+        "fields": {
+          "name": "Mira a76c2d",
+          "price": 137,
+          "day": "Thursday",
+          "time": "10:00",
+          "service": "Studio consultation"
+        },
+        "version": 1
+      },
+      "answer": {
+        "resource_type": "booking",
+        "record_id": "bk-80a2f137-d20",
+        "version": 1,
+        "fields": {
+          "name": "Mira a76c2d",
+          "price": 137,
+          "day": "Thursday",
+          "time": "10:00",
+          "service": "Studio consultation"
+        }
+      }
+    }
+  ]
+}

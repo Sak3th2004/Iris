@@ -25,6 +25,7 @@ class Store:
                 CREATE TABLE IF NOT EXISTS permissions(id TEXT PRIMARY KEY, body TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1);
                 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT, proposal TEXT, decision TEXT, before_row TEXT, after_row TEXT);
                 CREATE TABLE IF NOT EXISTS spend(id TEXT PRIMARY KEY, reserved REAL NOT NULL, actual REAL, purpose TEXT);
+                CREATE TABLE IF NOT EXISTS baseten_spend(id TEXT PRIMARY KEY, reserved REAL NOT NULL, actual REAL, purpose TEXT);
             ''')
             for resource, id, fields in SEED:
                 db.execute("INSERT OR IGNORE INTO records VALUES(?,?,?,1)", (resource, id, json.dumps(fields)))

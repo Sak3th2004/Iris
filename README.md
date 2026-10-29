@@ -36,7 +36,7 @@ Use **New record** to create invented guests and buyers. The initial Alice/Bob/P
 | Muse Spark 1.3 Standard permission interpretation | One live API interpretation verified locally |
 | Muse Voice Transcribe recording and WAV adapter | Implemented; live microphone/provider path not yet verified |
 | Isolated Playwright worker and separate Spark blind reader | Verified with real paid booking and order runs inside Docker Desktop's Linux VM |
-| Baseten Spark Open reader | Not integrated; awaiting credits |
+| Baseten Spark Open reader | Live booking and order runs verified; separate budget and durable reader evidence; see [Baseten setup](docs/BASETEN.md) |
 | Actual isolated-browser preview in owner UI | Live authenticated JPEG frames, freshness checks, action events, and owner stop |
 | Cal.com / Cal.diy write interception | Not integrated; current desks are served by Iris |
 | Held-out three-system results, coffee video, submission | Pending actual VM runs; no fabricated results |
@@ -53,11 +53,11 @@ The current product editors support booking-day and order-quantity instructions.
 
 ## Meta usage and budget
 
-Only `muse-spark-1.3` Standard and `muse-voice-transcribe-1.0` are configured. No Contributor mode, SAM, image generation, or automatic provider retries. A persistent SQLite budget reserves estimated worst-case input/output cost before each model call. Successful token usage settles the reservation; uncertain failures retain it conservatively. The default app budget is $149.99, bounded by `IRIS_SPEND_LIMIT_USD`. This is a local app guard, not a provider account limit; it cannot account for spending from other apps or a deleted database. Set the account limit in Meta's dashboard too.
+Meta runs `muse-spark-1.3` Standard and `muse-voice-transcribe-1.0`. The default independent reader uses Baseten `meta-models/muse-spark-open-1026`, with a separate initial $10 allowance out of $100 credit; see [Baseten setup](docs/BASETEN.md). No Contributor mode, SAM, image generation, or automatic provider retries. A persistent SQLite budget reserves estimated worst-case input/output cost before each model call. Successful token usage settles the reservation; uncertain failures retain it conservatively. The default app budget is $149.99, bounded by `IRIS_SPEND_LIMIT_USD`. This is a local app guard, not a provider account limit; it cannot account for spending from other apps or a deleted database. Set the account limit in Meta's dashboard too.
 
 Pricing assumptions (checked October 28, 2026): Spark input $1.25/M tokens and output $4.25/M; voice $0.18/hour. Cached-token savings are deliberately not assumed. [Meta pricing](https://dev.meta.ai/docs/pricing-rate-limits), [API reference](https://dev.meta.ai/docs/api-reference), [voice format](https://dev.meta.ai/docs/speech-to-text).
 
-Spark's roles are interpretation, browser action selection, and an independently prompted form read. The reader sees neither the instruction nor the planner answer. Reader disagreement stops the job; reader agreement never overrides the deterministic gate. Model interpretation can still misunderstand intent: the readable card makes that interpretation inspectable, and the gate enforces the locked permission, not a proof of natural-language understanding.
+Spark 1.3 handles interpretation and browser action selection. Spark Open on Baseten handles the independent form read; selecting `IRIS_READER_PROVIDER=meta` explicitly uses the previous separate Spark prompt instead. There is no automatic provider fallback. The reader sees neither the instruction nor the planner answer. Reader disagreement stops the job; reader agreement never overrides the deterministic gate. Model interpretation can still misunderstand intent: the readable card makes that interpretation inspectable, and the gate enforces the locked permission, not a proof of natural-language understanding.
 
 ## Isolation and security scope
 
@@ -75,4 +75,4 @@ python scripts/browser_check.py
 
 The browser check uses an isolated temporary database and real browser interactions: wrong record, protected-price fault, Enter save, a newly created buyer and order, mobile overflow, and browser errors. It is a software acceptance test, not an autonomous agent evaluation. `scripts/check_meta.py` makes one bounded **paid** live parser call; it never prints the key.
 
-See [evaluation protocol](docs/EVALUATION.md), [Cal integration assessment](docs/CAL_INTEGRATION.md), and [submission draft](docs/SUBMISSION.md). Do not claim measured superiority or a completed recording until those artifacts exist.
+See [architecture and delivery order](docs/ARCHITECTURE.md), [evaluation protocol](docs/EVALUATION.md), [Cal integration assessment](docs/CAL_INTEGRATION.md), and [submission draft](docs/SUBMISSION.md). Do not claim measured superiority or a completed recording until those artifacts exist.
