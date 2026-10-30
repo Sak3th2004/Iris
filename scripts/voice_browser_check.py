@@ -11,6 +11,7 @@ from playwright.sync_api import sync_playwright, expect
 root=Path(__file__).resolve().parents[1]
 base='http://127.0.0.1:8768'
 with httpx.Client(base_url=base,timeout=100) as client:
+    assert client.get('/api/desktop').json()['connected'], 'Start the isolated desktop before spending on voice.'
     state=client.get('/api/state').json()
     names={r['fields']['name'] for r in state['records']}
     name=next(n for n in ['Nora Vale','Tara Benton','Mina Corwin','Lena Arden','Nia Rowe'] if n not in names)
@@ -31,20 +32,21 @@ with httpx.Client(base_url=base,timeout=100) as client:
         context=browser.new_context(permissions=['microphone'],viewport={'width':1440,'height':1100})
         page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(base)
-        expect(page.locator('#model-status')).to_contain_text('Muse Spark')
-        page.locator('#mic').click()
-        expect(page.locator('#mic')).to_contain_text('Stop recording',timeout=15000)
+        expect(page.locator('.provider')).to_contain_text('Muse Spark')
+        page.get_by_role('button',name='Speak your instruction').click()
+        expect(page.get_by_role('button',name='Stop recording')).to_be_visible(timeout=15000)
         page.wait_for_timeout(int(duration*1000))
-        page.locator('#mic').click()
+        with page.expect_response(lambda r:r.url.endswith('/api/voice'),timeout=100000) as transcription:
+            page.get_by_role('button',name='Stop recording').click()
         expect(page.locator('#sentence')).to_have_value(__import__('re').compile(name),timeout=100000)
         transcript=page.locator('#sentence').input_value()
-        capture=page.evaluate('voiceCapture')
+        capture=transcription.value.json()
         assert capture and capture['capture_id']
         page.locator('#interpret').click()
-        expect(page.locator('#permission-status')).to_have_text('Permission locked',timeout=100000)
-        expect(page.locator('#permission-card')).to_contain_text(before['record_id'])
+        expect(page.locator('#permission-status')).to_have_text('Ready for review',timeout=100000)
+        expect(page.get_by_label('Permission card')).to_contain_text(before['record_id'])
         page.locator('#run-agent').click()
-        expect(page.locator('#permission-status')).to_have_text('Completed',timeout=150000)
+        expect(page.locator('#permission-status')).to_have_text('Allowed & verified',timeout=150000)
         page.screenshot(path=str(root/'artifacts/voice-completed.png'),full_page=True)
         assert not errors,errors
         detail=client.get('/api/desktop').json()

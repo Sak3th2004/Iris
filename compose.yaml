@@ -33,6 +33,7 @@ services:
     environment:
       IRIS_WORKER_TOKEN: ${IRIS_WORKER_TOKEN:?Set a random worker token in .env}
     networks: [browser]
+    volumes: [iris-profile:/home/pwuser/iris-profile]
     init: true
     shm_size: 1gb
     mem_limit: 2g
@@ -47,3 +48,4 @@ networks:
     internal: true
 volumes:
   iris-data: {}
+  iris-profile: {}

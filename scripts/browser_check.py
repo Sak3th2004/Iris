@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory() as temp:
             page=browser.new_page(viewport={'width':1440,'height':1000})
             errors=[]
             page.on('pageerror',lambda error:errors.append(str(error)))
-            page.goto('http://127.0.0.1:8767')
+            page.goto('http://127.0.0.1:8767/classic')
             page.locator('#toggle-manual').click()
             page.locator('.advanced-permission summary').click()
             page.locator('#manual-form button').click()

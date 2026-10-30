@@ -4,7 +4,7 @@ import os
 import asyncio
 from contextlib import asynccontextmanager, suppress
 from uuid import UUID
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, WebSocket
 from fastapi.responses import FileResponse, JSONResponse
 from .api import ROOT
 from .store import Store
@@ -12,6 +12,7 @@ from .meta import Meta
 from .reader import create_reader
 from .agent import Jobs
 from .desktop import Desktop, WorkerEvent
+from .stream import desktop_gateway
 
 def create_worker_app():
     token=os.getenv('IRIS_WORKER_TOKEN','')
@@ -45,6 +46,11 @@ def create_worker_app():
     async def error(request,exc): return JSONResponse({'detail':str(exc)},status_code=400)
     @app.get('/')
     def desk(): return FileResponse(ROOT/'web'/'worker.html')
+    @app.websocket('/desktop/stream')
+    async def stream(socket:WebSocket):
+        if not hmac.compare_digest(socket.headers.get('authorization',''),f'Bearer {token}'):
+            await socket.close(code=1008);return
+        await desktop_gateway(socket)
     @app.get('/records')
     def records(): return store.records()
     @app.post('/claim')
@@ -66,8 +72,19 @@ def create_worker_app():
         return {'ok':True}
     @app.post('/jobs/{id}/step')
     async def step(id:str,request:Request): return await jobs.step(id,await request.json(),meta,request.state.worker_id)
+    @app.post('/jobs/{id}/preflight')
+    async def preflight(id:str,request:Request):
+        data=bytearray()
+        async for chunk in request.stream():
+            data.extend(chunk)
+            if len(data)>2_900_000: raise HTTPException(413,'Visual review is too large.')
+        import json
+        try: payload=json.loads(data)
+        except (ValueError,UnicodeError): raise ValueError('Invalid visual review payload.') from None
+        if not isinstance(payload,dict): raise ValueError('Visual review must be an object.')
+        return await jobs.preflight(id,payload,reader,request.state.worker_id)
     @app.post('/jobs/{id}/write')
-    async def write(id:str,request:Request): return await jobs.submit(id,await request.json(),reader,request.state.worker_id)
+    async def write(id:str,request:Request): return await jobs.submit(id,await request.json(),reader,request.state.worker_id,channel=request.headers.get('x-iris-write-channel','http'))
     @app.post('/jobs/{id}/heartbeat')
     def heartbeat(id:str,request:Request): return jobs.heartbeat(id,request.state.worker_id)
     @app.post('/jobs/{id}/pause')

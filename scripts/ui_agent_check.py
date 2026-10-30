@@ -17,7 +17,7 @@ with httpx.Client(base_url=base,timeout=100) as client:
         browser=p.chromium.launch(headless=True)
         page=browser.new_page(viewport={'width':1600,'height':1100})
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-        page.goto(base)
+        page.goto(base+'/classic')
         page.locator('#sentence').fill(f"Move {name}'s booking to Friday. Keep the price and all other records unchanged.")
         page.locator('#interpret').click()
         expect(page.locator('#permission-status')).to_have_text('Permission locked',timeout=100000)
@@ -37,7 +37,7 @@ with httpx.Client(base_url=base,timeout=100) as client:
         assert status['job']['state']=='complete',status
         page=browser.new_page(viewport={'width':1600,'height':1100})
         page.on('pageerror',lambda e:errors.append(str(e)))
-        page.goto(base)
+        page.goto(base+'/classic')
         expect(page.locator('#permission-status')).to_have_text('Completed',timeout=15000)
         expect(page.locator('#activity-message')).to_contain_text('database confirms')
         expect(page.locator('#receipt')).to_contain_text('Friday')

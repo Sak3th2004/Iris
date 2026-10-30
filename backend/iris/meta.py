@@ -47,10 +47,14 @@ class Meta:
         with self.store.connect() as db:
             db.execute(f'UPDATE {self.spend_table} SET actual=? WHERE id=?', (cost, id))
 
-    async def json(self, system, data, purpose):
+    async def json(self, system, data, purpose, *, images=None):
         messages = [{'role':'system','content':system}, {'role':'user','content':json.dumps(data)}]
+        if images:
+            if len(images)!=2 or any(not isinstance(i,str) or not i.startswith('data:image/jpeg;base64,') for i in images):
+                raise ValueError('Visual review requires a desktop image and a button image.')
+            messages[1]['content']=[{'type':'text','text':json.dumps(data)}]+[{'type':'image_url','image_url':{'url':i}} for i in images]
         encoded = json.dumps(messages).encode()
-        if len(encoded) > 24000:
+        if len(encoded) > (3_000_000 if images else 24000):
             raise ValueError('Context is too large. Narrow this task.')
         # Conservative reservation: byte count bounds input tokens, plus fixed output cap.
         reservation = (len(encoded) + 2048) * 1.25 / 1e6 + 4096 * 4.25 / 1e6
