@@ -132,7 +132,8 @@ class Jobs:
             proposal=Proposal(permission_id=permission.id,resource_type=form['resource_type'],record_id=form['record_id'],fields=form.get('fields') or {},version=form['version'],origin='agent')
             decision=decide(permission,proposal,self.store.get(proposal.resource_type,proposal.record_id))
             code=decision.code
-            if decision.verdict!='allow': reason=reason or decision.reason
+            if decision.verdict!='allow':
+                reason=decision.reason if code not in ('wrong_record','field_mismatch') else reason or decision.reason
         if permission and code=='field_mismatch' and isinstance(form,dict) and any(k not in form.get('fields',{}) or not same(form['fields'][k],v) for k,v in permission.preserve_fields.items()):
             code='protected_form_field'
         recoverable=code in ('wrong_record','field_mismatch','protected_form_field','exact_write','form_incomplete') and permission is not None

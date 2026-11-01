@@ -38,6 +38,7 @@ def test_stale_database_stops_even_if_open_form_version_looks_current(tmp_path):
     store.submit(Proposal(permission_id=other.id,resource_type='order',record_id='or-alice',fields={'quantity':2},version=1))
     result=jobs.hold(id,form,'local')
     assert result['hold'] and result['code']=='stale_version' and not result['recoverable']
+    assert 'new permission' in result['reason']
     assert jobs.get(id)['state']=='paused' and store.permission(permission.id) is None
     assert store.get('order','or-alice').fields['quantity']==2
 
@@ -62,3 +63,15 @@ def test_owner_discard_revokes_permission_and_running_task(tmp_path):
     result=store.submit(Proposal(permission_id=permission.id,resource_type='order',record_id='or-alice',fields={'quantity':4},version=1),job_id=id,worker_id='local')
     assert result['decision']['verdict']=='pause'
     assert store.get('order','or-alice').version==1
+
+
+def test_legacy_booking_upgrade_invalidates_old_permission_atomically(tmp_path):
+    path=tmp_path/'legacy.sqlite';store=Store(path);jobs=Jobs(store)
+    row=store.create_record('booking',{'name':'Legacy invented guest','day':'Tuesday','price':120})
+    permission=store.lock('Thursday','booking',row.record_id,{'day':'Thursday'},1)
+    job=jobs.create(permission.id)
+    upgraded=Store(path)
+    assert upgraded.get('booking',row.record_id).version==2
+    assert upgraded.permission(permission.id) is None
+    assert jobs.get(job['id'])['state']=='paused'
+    assert Store(path).get('booking',row.record_id).version==2

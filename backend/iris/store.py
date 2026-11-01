@@ -40,6 +40,7 @@ class Store:
                 CREATE TABLE IF NOT EXISTS instruction_captures(id TEXT PRIMARY KEY, records TEXT NOT NULL, captured_at REAL NOT NULL, expires_at REAL NOT NULL, state TEXT NOT NULL, transcript TEXT);
                 CREATE TABLE IF NOT EXISTS capture_threads(capture_id TEXT PRIMARY KEY, root_id TEXT NOT NULL, messages TEXT NOT NULL);
             ''')
+            db.execute('BEGIN IMMEDIATE')
             for resource, id, fields in SEED:
                 db.execute("INSERT OR IGNORE INTO records VALUES(?,?,?,1)", (resource, id, json.dumps(fields)))
             for row in db.execute("SELECT id, fields FROM records WHERE resource='booking'"):
@@ -49,7 +50,12 @@ class Store:
                     fields.setdefault("host", "Studio")
                     fields.setdefault("status", "confirmed")
                     fields.setdefault("duration_minutes", 60)
-                    db.execute("UPDATE records SET fields=? WHERE resource='booking' AND id=?", (json.dumps(fields), row["id"]))
+                    db.execute("UPDATE records SET fields=?,version=version+1 WHERE resource='booking' AND id=?", (json.dumps(fields), row["id"]))
+                    for saved in db.execute('SELECT id,body FROM permissions WHERE active=1').fetchall():
+                        permission=Permission.model_validate_json(saved['body'])
+                        if permission.resource_type=='booking' and permission.record_id==row['id']:
+                            db.execute('UPDATE permissions SET active=0 WHERE id=?',(saved['id'],))
+                            db.execute("UPDATE jobs SET state='paused',detail='Booking fields changed during an upgrade. A new permission is required.' WHERE permission_id=? AND state IN ('queued','running')",(saved['id'],))
 
     @contextmanager
     def connect(self):
