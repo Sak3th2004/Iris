@@ -1,20 +1,16 @@
 import {api} from './api';
-export async function startRecording(options?:{onAutoStop?:()=>void;parentCaptureId?:string|null}){
+export async function startRecording(options?:{parentCaptureId?:string|null}){
   const stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1},video:false});
   const context=new AudioContext({sampleRate:24000});
   let source:MediaStreamAudioSourceNode|undefined,node:AudioWorkletNode|undefined;
-  const cleanup=async()=>{source?.disconnect();node?.disconnect();stream.getTracks().forEach(t=>t.stop());await context.close();};
+  let closed=false;
+  const cleanup=async()=>{if(closed)return;closed=true;source?.disconnect();node?.disconnect();stream.getTracks().forEach(t=>t.stop());if(context.state!=='closed')await context.close();};
   try{
     await context.resume();await context.audioWorklet.addModule('/static/voice-worklet.js');
     const capture=await api('voice/start',{parent_capture_id:options?.parentCaptureId||null}),chunks:Float32Array[]=[];
     source=context.createMediaStreamSource(stream);node=new AudioWorkletNode(context,'iris-capture');
-    let heard=false,speechMs=0,lastVoice=performance.now(),ended=false;
     node.port.onmessage=e=>{
-      const samples=e.data as Float32Array;chunks.push(samples);
-      let sum=0;for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];
-      const rms=Math.sqrt(sum/samples.length),now=performance.now();
-      if(rms>0.015){heard=true;lastVoice=now;speechMs+=samples.length/context.sampleRate*1000;}
-      else if(!ended&&heard&&speechMs>450&&now-lastVoice>800){ended=true;options?.onAutoStop?.();}
+      if(!closed)chunks.push(e.data as Float32Array);
     };
     const gain=context.createGain();gain.gain.value=0;source.connect(node);node.connect(gain);gain.connect(context.destination);
     return {cancel:cleanup,stop:async()=>{
