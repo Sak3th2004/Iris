@@ -110,11 +110,14 @@ async def main(runtime='docker'):
                         await page.reload()
                         await page.locator('[data-record]').first.wait_for()
                         await page.evaluate('(id)=>job=id',id)
+                        holds = 0
+                        last_hold = ''
                         for step in range(12):
                             if lost.is_set(): raise ValueError('Worker connection lost.')
                             status = await client.get(f'/jobs/{id}'); status.raise_for_status()
                             if status.json()['state'] != 'running': break
                             observation = await page.evaluate('({records,open_form:capture()})')
+                            if last_hold: observation['held'] = last_hold
                             await event(id,'observing','Reading the current browser form.')
                             response = await client.post(f'/jobs/{id}/step',json=observation);response.raise_for_status();action=response.json()
                             if lost.is_set(): raise ValueError('Worker connection lost during model call.')
@@ -139,6 +142,19 @@ async def main(runtime='docker'):
                                 await locator.fill(str(action['value']))
                                 await event(id,'filled',f'Set {field} to {action["value"]}.')
                             elif kind == 'save':
+                                captured=await page.evaluate('capture()')
+                                held=await client.post(f'/jobs/{id}/hold',json=captured or {})
+                                held.raise_for_status()
+                                reason=held.json().get('reason')
+                                if reason:
+                                    holds += 1
+                                    last_hold = reason
+                                    await event(id,'held',reason)
+                                    if holds >= 3:
+                                        await event(id,'paused','The unauthorized click was held three times. Nothing was saved.')
+                                        await client.post(f'/jobs/{id}/pause')
+                                        break
+                                    continue
                                 button=page.get_by_role('button',name='Save',exact=True)
                                 await aim(button)
                                 await event(id,'visual review','Pointer paused at Save. Spark Open is reading the screen pixels and button before any click.')

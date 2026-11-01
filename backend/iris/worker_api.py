@@ -72,6 +72,9 @@ def create_worker_app():
         return {'ok':True}
     @app.post('/jobs/{id}/step')
     async def step(id:str,request:Request): return await jobs.step(id,await request.json(),meta,request.state.worker_id)
+    @app.post('/jobs/{id}/hold')
+    async def hold(id:str, request:Request):
+        return jobs.hold(id, await request.json(), request.state.worker_id)
     @app.post('/jobs/{id}/preflight')
     async def preflight(id:str,request:Request):
         data=bytearray()

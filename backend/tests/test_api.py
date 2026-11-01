@@ -7,7 +7,7 @@ def test_new_person_entire_flow(tmp_path):
     assert response.status_code == 200
     row = response.json()
     p = client.post('/api/permissions/manual',json={'resource_type':'booking','record_id':row['record_id'],'field':'day','value':'Saturday','version':1}).json()
-    proposal = {'permission_id':p['id'],'resource_type':'booking','record_id':row['record_id'],'fields':{'day':'Saturday'},'version':1}
+    proposal = {'permission_id':p['id'],'resource_type':'booking','record_id':row['record_id'],'fields':p['set_fields'],'version':1}
     result = client.post('/api/writes',json=proposal).json()
     assert result['decision']['verdict'] == 'allow'
     assert result['after']['fields']['name'] == 'Mira Patel'

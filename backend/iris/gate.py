@@ -7,6 +7,22 @@ def same(a, b):
     return json.dumps(a, sort_keys=True, allow_nan=False) == json.dumps(b, sort_keys=True, allow_nan=False)
 
 
+def hold_reason(permission: Permission | None, form: dict | None) -> str | None:
+    """Why a click must not be sent. None means the open form matches the permission."""
+    if permission is None or not form:
+        return "No locked permission is open on this form. The click was not sent."
+    if (form.get("resource_type"), form.get("record_id")) != (permission.resource_type, permission.record_id):
+        return "This is not the authorized record. The click was not sent."
+    fields = form.get("fields") or {}
+    for key, value in permission.set_fields.items():
+        if not same(fields.get(key), value):
+            return f"{key} is not the authorized value. The click was not sent."
+    for key, value in permission.preserve_fields.items():
+        if key in fields and not same(fields.get(key), value):
+            return f"{key} would change. The click was not sent."
+    return None
+
+
 def decide(permission: Permission | None, proposal: Proposal, record: Record | None) -> Decision:
     def result(verdict, code, reason):
         return Decision(verdict=verdict, code=code, reason=reason)

@@ -4,14 +4,20 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from uuid import uuid4
 from .gate import decide
-from .models import Permission, Proposal, Record
+from .models import Decision, Permission, Proposal, Record
 from .lifecycle import recover_jobs, owns_lease
 from .capture import Captures
+from .schedule import move_to_weekday
+
+def booking(name, day, time, service, price):
+    fields = {"name": name, "day": day, "time": time, "service": service, "price": price, "host": "Studio", "status": "confirmed", "duration_minutes": 60}
+    fields.update(move_to_weekday(fields, day))
+    return fields
 
 SEED = [
-    ("booking", "bk-alice", {"name": "Alice Morgan", "day": "Tuesday", "time": "10:00", "service": "Design consultation", "price": 120}),
-    ("booking", "bk-bob", {"name": "Bob Chen", "day": "Wednesday", "time": "14:30", "service": "Strategy session", "price": 180}),
-    ("booking", "bk-priya", {"name": "Priya Shah", "day": "Friday", "time": "11:00", "service": "Portfolio review", "price": 90}),
+    ("booking", "bk-alice", booking("Alice Morgan", "Tuesday", "10:00", "Design consultation", 120)),
+    ("booking", "bk-bob", booking("Bob Chen", "Wednesday", "14:30", "Strategy session", 180)),
+    ("booking", "bk-priya", booking("Priya Shah", "Friday", "11:00", "Portfolio review", 90)),
     ("order", "or-alice", {"name": "Alice Morgan", "item": "Ceramic pour-over", "quantity": 1, "price": 48}),
     ("order", "or-bob", {"name": "Bob Chen", "item": "Studio mug", "quantity": 2, "price": 64}),
     ("order", "or-priya", {"name": "Priya Shah", "item": "Linen journal", "quantity": 1, "price": 28}),
@@ -35,6 +41,14 @@ class Store:
             ''')
             for resource, id, fields in SEED:
                 db.execute("INSERT OR IGNORE INTO records VALUES(?,?,?,1)", (resource, id, json.dumps(fields)))
+            for row in db.execute("SELECT id, fields FROM records WHERE resource='booking'"):
+                fields = json.loads(row["fields"])
+                if "starts_at" not in fields and fields.get("day"):
+                    fields.update(move_to_weekday(fields, fields["day"]))
+                    fields.setdefault("host", "Studio")
+                    fields.setdefault("status", "confirmed")
+                    fields.setdefault("duration_minutes", 60)
+                    db.execute("UPDATE records SET fields=? WHERE resource='booking' AND id=?", (json.dumps(fields), row["id"]))
 
     @contextmanager
     def connect(self):
@@ -97,6 +111,14 @@ class Store:
                 permission = None  # Every transport must respect an assigned worker lease.
             before = self._get(db, proposal.resource_type, proposal.record_id)
             decision = decide(permission, proposal, before)  # Exactly one decision, inside the write transaction.
+            if decision.verdict == "allow" and proposal.resource_type == "booking":
+                merged = before.fields | proposal.fields
+                start, host = merged.get("starts_at"), merged.get("host", "Studio")
+                for other in db.execute("SELECT id, fields FROM records WHERE resource='booking' AND id!=?", (proposal.record_id,)):
+                    booked = json.loads(other["fields"])
+                    if booked.get("status", "confirmed") != "cancelled" and booked.get("starts_at") == start and booked.get("host", "Studio") == host:
+                        decision = Decision(verdict="reject", code="slot_taken", reason="That time is already booked on this host. Nothing was saved.")
+                        break
             if decision.verdict == "allow":
                 db.execute("UPDATE records SET fields=?,version=version+1 WHERE resource=? AND id=?", (json.dumps(before.fields | proposal.fields), proposal.resource_type, proposal.record_id))
                 db.execute("UPDATE permissions SET active=0 WHERE id=?", (permission.id,))

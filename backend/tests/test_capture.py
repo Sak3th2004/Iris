@@ -33,7 +33,8 @@ def test_spoken_snapshot_is_single_use(tmp_path,monkeypatch):
     response=client.post('/api/permissions/interpret',json=spoken)
     assert response.status_code==200
     permission=response.json()['permission']
-    assert permission['version']==1 and permission['set_fields']=={'day':'Thursday'}
+    assert permission['version']==1 and permission['set_fields']['day']=='Thursday'
+    assert permission['set_fields']['starts_at'].startswith('2026-11-05T10:00')
     assert client.post('/api/permissions/interpret',json=spoken).status_code==400
 
 

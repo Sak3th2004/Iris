@@ -1,7 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
 import pytest
+from iris.gate import hold_reason
 from iris.store import Store
 from iris.models import Proposal
+from iris.schedule import move_to_weekday
 
 @pytest.fixture
 def store(tmp_path):
@@ -44,6 +46,28 @@ def test_forbidden(store, operation):
     p = permission(store)
     assert store.submit(proposal(p,operation=operation))['decision']['verdict'] == 'reject'
     assert store.get('booking','bk-alice').version == 1
+
+def test_taken_slot_does_not_move_alice(store):
+    bob = store.get('booking', 'bk-bob')
+    change = {'starts_at': bob.fields['starts_at'], 'day': bob.fields['day'], 'time': bob.fields['time']}
+    permission = store.lock("Give Alice Bob's time.", 'booking', 'bk-alice', change, 1)
+    result = store.submit(proposal(permission, fields=change))
+    assert result['decision']['code'] == 'slot_taken'
+    assert store.get('booking', 'bk-alice').fields['day'] == 'Tuesday'
+    assert store.get('booking', 'bk-bob').version == 1
+
+def test_hold_stops_the_wrong_record_before_a_click(store):
+    permission = store.lock("Move Alice to Thursday. Keep the price.", "booking", "bk-alice", {"day": "Thursday"}, 1)
+    bob = store.get("booking", "bk-bob")
+    assert "not the authorized record" in hold_reason(permission, bob.model_dump())
+    alice = store.get("booking", "bk-alice").model_dump()
+    alice["fields"] = alice["fields"] | {"day": "Thursday", "price": 0}
+    assert "price would change" in hold_reason(permission, alice)
+
+def test_thursday_keeps_the_clock_time(store):
+    alice = store.get('booking', 'bk-alice')
+    moved = move_to_weekday(alice.fields, 'Thursday')
+    assert moved['time'] == '10:00' and moved['starts_at'].startswith('2026-11-05T10:00')
 
 def test_missing_permission(store):
     p = permission(store)

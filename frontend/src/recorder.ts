@@ -1,5 +1,5 @@
 import {api} from './api';
-export async function startRecording(){
+export async function startRecording(options?:{onAutoStop?:()=>void}){
   const stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1},video:false});
   const context=new AudioContext({sampleRate:24000});
   let source:MediaStreamAudioSourceNode|undefined,node:AudioWorkletNode|undefined;
@@ -8,7 +8,14 @@ export async function startRecording(){
     await context.resume();await context.audioWorklet.addModule('/static/voice-worklet.js');
     const capture=await api('voice/start',{}),chunks:Float32Array[]=[];
     source=context.createMediaStreamSource(stream);node=new AudioWorkletNode(context,'iris-capture');
-    node.port.onmessage=e=>chunks.push(e.data);
+    let heard=false,speechMs=0,lastVoice=performance.now(),ended=false;
+    node.port.onmessage=e=>{
+      const samples=e.data as Float32Array;chunks.push(samples);
+      let sum=0;for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];
+      const rms=Math.sqrt(sum/samples.length),now=performance.now();
+      if(rms>0.015){heard=true;lastVoice=now;speechMs+=samples.length/context.sampleRate*1000;}
+      else if(!ended&&heard&&speechMs>450&&now-lastVoice>800){ended=true;options?.onAutoStop?.();}
+    };
     const gain=context.createGain();gain.gain.value=0;source.connect(node);node.connect(gain);gain.connect(context.destination);
     return {cancel:cleanup,stop:async()=>{
       const rate=context.sampleRate;await cleanup();
