@@ -23,7 +23,12 @@ with httpx.Client(base_url=base, timeout=100) as client, sync_playwright() as p:
     results = []
     for resource, field, value in [('booking', 'day', 'Saturday'), ('order', 'quantity', 4)]:
         name = 'Iris Test ' + uuid4().hex[:7]
-        response = client.post('/api/records', json={'resource_type': resource, 'name': name, 'detail': 'Invented review' if resource == 'booking' else 'Ceramic cup', 'price': 173})
+        test_time='10:00'
+        if resource=='booking':
+            existing=client.get('/api/state').json()['records']
+            occupied=[int(r['fields'].get('time','10:00')[:2])*60+int(r['fields'].get('time','10:00')[3:]) for r in existing if r['resource_type']=='booking' and r['fields'].get('day') in ('Monday','Saturday')]
+            test_time=next(f'{hour:02}:15' for hour in range(6,24) if all(abs(hour*60+15-minute)>=60 for minute in occupied))
+        response = client.post('/api/records', json={'resource_type': resource, 'name': name, 'detail': 'Invented review' if resource == 'booking' else 'Ceramic cup', 'price': 173,'time':test_time})
         response.raise_for_status()
         before = response.json()
         sentence = f"Set {name}'s {resource} {field} to {value}. Keep the price and every other field and record unchanged."

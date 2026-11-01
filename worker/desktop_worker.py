@@ -133,18 +133,24 @@ async def main(runtime='docker'):
                                     await click(tab)
                                     await event(id,'desk',f'Switched to the {resource} desk.')
                                 await click(page.locator('[data-record]').filter(has_text=record))
+                                last_hold = ''
                                 await event(id,'opened',f'Opened record {record}.')
                             elif kind == 'fill':
                                 field = action['field']
                                 if not observation['open_form'] or field not in observation['open_form']['fields']: raise ValueError('Unknown field selected.')
-                                allowed=await client.post(f'/jobs/{id}/fill',json={'field':field,'value':action['value']})
+                                allowed=await client.post(f'/jobs/{id}/fill',json={'field':field,'value':action['value'],'form':observation['open_form']})
                                 allowed.raise_for_status()
                                 if not allowed.json().get('ok'):
-                                    await event(id,'held',allowed.json().get('reason') or 'That value was not typed.')
+                                    last_hold=allowed.json()
+                                    holds += 1
+                                    await event(id,'held',last_hold.get('reason') or 'That value was not typed.')
+                                    if not last_hold.get('recoverable') or holds>=3:
+                                        await client.post(f'/jobs/{id}/pause');break
                                     continue
                                 locator = page.get_by_label(field,exact=True)
                                 await click(locator)
                                 await locator.fill(str(action['value']))
+                                last_hold = ''
                                 await event(id,'filled',f'Set {field} to {action["value"]}.')
                             elif kind == 'save':
                                 captured=await page.evaluate('capture()')
@@ -153,19 +159,12 @@ async def main(runtime='docker'):
                                 reason=held.json().get('reason')
                                 if reason:
                                     holds += 1
-                                    last_hold = reason
-                                    body=held.json()
+                                    last_hold = held.json()
                                     await event(id,'held',reason)
-                                    target=body.get('record_id')
-                                    if captured and target and captured.get('record_id')!=target:
-                                        resource=body.get('resource_type')
-                                        tab=page.locator(f'[data-desk="{resource}"]')
-                                        if await tab.get_attribute('aria-pressed')!='true':
-                                            await click(tab)
-                                        await click(page.locator('#records [data-record]').filter(has_text=target))
-                                        await event(id,'opened',f'Left the refused record. Opened {target}.')
+                                    if not last_hold.get('recoverable'):
+                                        break
                                     if holds >= 3:
-                                        await event(id,'paused','The unauthorized click was held three times. Nothing was saved.')
+                                        await event(id,'paused','Three actions were refused. Nothing was saved.')
                                         await client.post(f'/jobs/{id}/pause')
                                         break
                                     continue
@@ -192,6 +191,10 @@ async def main(runtime='docker'):
                                 verdict = answer.get('decision',{})
                                 await event(id,verdict.get('verdict','error'),verdict.get('reason',answer.get('detail','Write failed.')))
                                 if verdict.get('verdict') in ('allow','pause'): break
+                                last_hold={'code':verdict.get('code'),'reason':verdict.get('reason')}
+                                if verdict.get('code') in ('slot_taken','invalid_schedule','stale_version'):
+                                    await event(id,'paused',verdict.get('reason'))
+                                    await client.post(f'/jobs/{id}/pause');break
                             else:
                                 await event(id,'paused',action.get('question','Agent needs clarification.'))
                                 await client.post(f'/jobs/{id}/pause');break

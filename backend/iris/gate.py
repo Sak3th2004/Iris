@@ -13,12 +13,14 @@ def hold_reason(permission: Permission | None, form: dict | None) -> str | None:
         return "No locked permission is open on this form. The click was not sent."
     if (form.get("resource_type"), form.get("record_id")) != (permission.resource_type, permission.record_id):
         return "This is not the authorized record. The click was not sent."
+    if form.get('version') != permission.version:
+        return 'The record version changed. A new permission is required.'
     fields = form.get("fields") or {}
     for key, value in permission.set_fields.items():
         if not same(fields.get(key), value):
             return f"{key} is not the authorized value. The click was not sent."
     for key, value in permission.preserve_fields.items():
-        if key in fields and not same(fields.get(key), value):
+        if key not in fields or not same(fields.get(key), value):
             return f"{key} would change. The click was not sent."
     return None
 

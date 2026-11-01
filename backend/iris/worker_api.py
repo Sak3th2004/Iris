@@ -75,7 +75,7 @@ def create_worker_app():
     @app.post('/jobs/{id}/fill')
     async def fill(id:str, request:Request):
         body=await request.json()
-        return jobs.allow_fill(id, body.get('field'), body.get('value'), request.state.worker_id)
+        return jobs.allow_fill(id, body.get('field'), body.get('value'), request.state.worker_id,body.get('form'))
     @app.post('/jobs/{id}/hold')
     async def hold(id:str, request:Request):
         return jobs.hold(id, await request.json(), request.state.worker_id)

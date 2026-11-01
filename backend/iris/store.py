@@ -106,6 +106,12 @@ class Store:
             row = db.execute("SELECT body FROM permissions WHERE id=?" + (" AND active=1" if active_only else ""), (id,)).fetchone()
             return Permission.model_validate_json(row['body']) if row else None
 
+    def revoke(self,id):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('UPDATE permissions SET active=0 WHERE id=?',(id,))
+            db.execute("UPDATE jobs SET state='stopped',detail='Permission discarded by owner.' WHERE permission_id=? AND state IN ('queued','running')",(id,))
+
     def submit(self, proposal: Proposal, *, job_id=None, worker_id=None):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")

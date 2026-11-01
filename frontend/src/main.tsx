@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {ArrowRight,Check,History,Mic,Monitor,ShieldCheck,Square,Volume2,VolumeX,X} from 'lucide-react';
 import {Desktop} from './Desktop';
+import {WriteComparison} from './WriteComparison';
 import {api} from './api';
 import {startRecording} from './recorder';
 import {useSpeech} from './useSpeech';
@@ -36,6 +37,7 @@ function App(){
   useEffect(()=>()=>{interaction.current++;clearTimeout(recordTimer.current);void recorder.current?.cancel();},[]);
   function cancelInstruction(){
     interaction.current++;cancelSpeech();handsFree.current=false;parentCapture.current=null;
+    if(permission)void api('permissions/'+permission.id+'/revoke',{}).catch(e=>setError(e.message));
     clearTimeout(recordTimer.current);void recorder.current?.cancel();recorder.current=null;
     setRecording(false);setInput('');setCapture(null);setPermission(null);setQuestion('');
   }
@@ -55,7 +57,7 @@ function App(){
     const turn=interaction.current;
     try{
       const data=await api('permissions/interpret',{sentence:input.trim(),capture_id:capture});
-      if(turn!==interaction.current)return;
+      if(turn!==interaction.current){if(data.permission)await api('permissions/'+data.permission.id+'/revoke',{});return;}
       if(data.question){setQuestion(data.question);}
       else{setPermission(data.permission);setCapture(null);parentCapture.current=null;}
       setConfig(await api('state'));
@@ -75,7 +77,7 @@ function App(){
       const data=await current.stop();if(turn!==interaction.current)return;setInput(data.sentence);setQuestion('');setPermission(null);
       setBusy('Taking the spoken task');
       const compiled=await api('permissions/interpret',{sentence:data.sentence,capture_id:data.capture_id});
-      if(turn!==interaction.current)return;
+      if(turn!==interaction.current){if(compiled.permission)await api('permissions/'+compiled.permission.id+'/revoke',{});return;}
       if(compiled.question){setQuestion(compiled.question);setCapture(data.capture_id);parentCapture.current=data.capture_id;followup=compiled.question;}
       else{
         parentCapture.current=null;setCapture(null);setPermission(compiled.permission);
@@ -116,14 +118,16 @@ function App(){
       {error&&<div className="error" role="alert"><span>{error}</span><button aria-label="Dismiss error" onClick={()=>setError('')}><X size={15}/></button></div>}
       {question&&<section className="ask-state"><span className="eyebrow">PAUSED · ONE DETAIL NEEDED</span><p>{question}</p><small>{capture?'Answer by voice to keep the original snapshot.':'Update the full instruction above.'} Nothing has been saved.</small></section>}
       {shownPermission?<section className="permission" aria-label="Permission card"><div className="permission-title"><ShieldCheck size={19}/><strong>Locked permission</strong><span id="permission-status">{verdict}</span></div><blockquote>{shownPermission.sentence}</blockquote><div className="record-identity">{shownPermission.resource_type} / {shownPermission.record_id}<span>VERSION {shownPermission.version}</span></div><dl>{Object.entries(shownPermission.set_fields).map(([key,value])=><div key={key}><dt>Set {key}</dt><dd>{String(value)}</dd></div>)}{Object.entries(shownPermission.preserve_fields).map(([key,value])=><div key={key} className="preserved"><dt>Keep {key}</dt><dd>{String(value)}</dd></div>)}</dl><div className="forbidden"><span>FORBIDDEN</span><p>{shownPermission.forbidden_operations.join(', ')}; every other record</p></div>{permission&&<button className="primary" id="run-agent" disabled={!!busy||active||!snapshot?.connected} onClick={()=>void delegate()}>Authorize & start<ArrowRight size={16}/></button>}</section>:<div className="empty-permission"><ShieldCheck size={24}/><p>Your permission will appear here.</p><span>No record is writable without it.</span></div>}
-      <p className="scope-note">A booking keeps its clock time and its price. A time already held is refused. The shop counter uses the same gate.</p>
+      <p className="scope-note">A booking keeps its clock time and its price. Overlapping appointments are refused. Weekdays mean the next occurrence in Asia/Kolkata. The shop counter uses the same gate.</p>
     </section>
     <section className="work-area"><div className="work-heading"><div><span className="eyebrow">THE AGENT DESK</span><h2>A separate place to work.</h2></div><span className="isolation-tag"><ShieldCheck size={13}/>Isolated Linux desktop</span></div><Desktop working={active} held={held} pulse={latest?.id||0}/>
       <div className="task-strip"><div className={`task-symbol ${active?'active':''}`}>{receipt?.receipt?<Check size={21}/>:<Monitor size={21}/>}</div><div><h3>{held?'Click held':checking?'Reading the form pixels':active?'Iris has the cursor':snapshot?.job?.state==='paused'?'Stopped before a save':receipt?.receipt?'Saved. Read back. Verified.':'Ready for an authorized task'}</h3><p>{held?latest.detail:active?latest?.detail||snapshot.job.detail:snapshot?.job?.state==='paused'?snapshot.job.detail:receipt?.receipt?'The receipt below comes from the database after the write.':'Review the permission, then let Iris work on this desktop.'}</p></div>{active&&<button className="stop" onClick={()=>void api('runs/'+snapshot.job.id+'/stop',{}).catch(e=>setError(e.message))}><Square size={12}/>Stop task</button>}</div>
       {receipt?.receipt&&<section className="receipt" id="receipt"><div><span className="eyebrow">DATABASE RECEIPT</span><h3>{receipt.receipt.after.fields.name}</h3><span>{receipt.receipt.after.record_id} · v{receipt.receipt.before.version} → v{receipt.receipt.after.version}</span></div><div className="receipt-changes">{Object.entries(receipt.receipt.after.fields).filter(([key,value])=>value!==receipt.receipt.before.fields[key]).map(([key,value])=><div key={key}><span>{key}</span><s>{String(receipt.receipt.before.fields[key])}</s><ArrowRight size={13}/><strong>{String(value)}</strong></div>)}</div><ShieldCheck size={23}/></section>}
+      {shownPermission&&<WriteComparison permission={shownPermission} proposed={snapshot?.permission?.id===shownPermission.id?(snapshot?.visual_checks?.[0]?.answer?.record||snapshot?.reader_checks?.at(-1)?.form||snapshot?.guard_checks?.[0]?.form):undefined} saved={receipt?.job?.permission_id===shownPermission.id?receipt?.receipt?.after:undefined}/>}
       <section className="activity-panel"><div className="section-title"><h3><History size={16}/>Attempt & evidence</h3><span>Live tool events, independent reads, gate verdicts</span></div>
         {(snapshot?.visual_checks||[]).map((check:any)=><section className="visual-evidence" key={check.id}><img src={'/api/visual/'+check.id+'/button'} alt="Actual button captured before the click"/><div><span className="eyebrow">PIXEL REVIEW · {check.verdict}</span><p>{check.reason}</p><small>{check.provider} · {check.elapsed_ms} ms · <a href={'/api/visual/'+check.id+'/screen'} target="_blank" rel="noreferrer">Inspect the captured screen</a></small></div></section>)}
         {!snapshot?.events?.length&&<p className="empty-activity">The first attempt will appear here when a task starts.</p>}
+        {(snapshot?.guard_checks||[]).map((check:any)=><div className="activity-row" key={'guard'+check.id}><span className="verdict reject">Held before {check.stage==='before_fill'?'typing':'click'}</span><p>{check.reason}<small>{check.form?.resource_type} / {check.form?.record_id} ? {check.code}</small></p><small>Agent attempt</small></div>)}
         {(snapshot?.reader_checks||[]).map((check:any)=><div className="activity-row" key={'reader'+check.id}><span className="event-kind">Blind read</span><p>{check.provider} · {check.model} · {check.outcome}</p><small>{check.elapsed_ms} ms</small></div>)}
         {audit.map((entry:any)=><div className="activity-row" key={'audit'+entry.id}><span className={'verdict '+entry.decision.verdict}>{entry.decision.verdict}</span><p>{entry.decision.reason}</p><small>{entry.proposal.origin==='fault_injection'?'Fault injection':entry.proposal.origin==='agent'?'Agent attempt':'Manual attempt'}</small></div>)}
         {(snapshot?.events||[]).slice(0,8).map((event:any)=><div className="activity-row" key={event.id}><span className="event-kind">{event.action}</span><p>{event.detail}</p></div>)}

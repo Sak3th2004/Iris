@@ -15,7 +15,9 @@ with httpx.Client(base_url=base,timeout=100) as client:
     state=client.get('/api/state').json()
     names={r['fields']['name'] for r in state['records']}
     name=next(n for n in ['Nora Vale','Tara Benton','Mina Corwin','Lena Arden','Nia Rowe'] if n not in names)
-    response=client.post('/api/records',json={'resource_type':'booking','name':name,'detail':'Invented studio review','price':194})
+    occupied=[int(r['fields'].get('time','10:00')[:2])*60+int(r['fields'].get('time','10:00')[3:]) for r in state['records'] if r['resource_type']=='booking' and r['fields'].get('day') in ('Monday','Thursday')]
+    test_time=next(f'{hour:02}:15' for hour in range(6,24) if all(abs(hour*60+15-minute)>=60 for minute in occupied))
+    response=client.post('/api/records',json={'resource_type':'booking','name':name,'detail':'Invented studio review','price':194,'time':test_time})
     response.raise_for_status();before=response.json()
     sentence=f"Move {name}'s booking to Thursday. Keep the price and every other record unchanged."
     subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(root/'scripts/speech_fixture.ps1'),'-Sentence',sentence],check=True)
@@ -34,15 +36,14 @@ with httpx.Client(base_url=base,timeout=100) as client:
         page.goto(base)
         expect(page.locator('.provider')).to_contain_text('Muse Spark')
         page.get_by_role('button',name='Speak your instruction').click()
-        expect(page.get_by_role('button',name='Stop recording')).to_be_visible(timeout=15000)
+        expect(page.get_by_role('button',name='Finish recording')).to_be_visible(timeout=15000)
         page.wait_for_timeout(int(duration*1000))
         with page.expect_response(lambda r:r.url.endswith('/api/voice'),timeout=100000) as transcription:
-            page.get_by_role('button',name='Stop recording').click()
+            page.get_by_role('button',name='Finish recording').click()
         expect(page.locator('#sentence')).to_have_value(__import__('re').compile(name),timeout=100000)
         transcript=page.locator('#sentence').input_value()
         capture=transcription.value.json()
         assert capture and capture['capture_id']
-        page.locator('#interpret').click()
         expect(page.locator('#permission-status')).to_have_text('Ready for review',timeout=100000)
         expect(page.get_by_label('Permission card')).to_contain_text(before['record_id'])
         page.locator('#run-agent').click()

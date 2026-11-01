@@ -101,7 +101,7 @@ def create_app(path=None):
     def desktop_status():
         job = jobs.latest()
         permission = store.permission(job['permission_id'],active_only=False) if job else None
-        return desktop.status() | {'job':job,'permission':permission.model_dump() if permission else None,'events':desktop.events(job['id']) if job else [],'reader_checks':jobs.checks(job['id']) if job else [],'visual_checks':jobs.visual.checks(job['id']) if job else []}
+        return desktop.status() | {'job':job,'permission':permission.model_dump() if permission else None,'events':desktop.events(job['id']) if job else [],'guard_checks':jobs.guards(job['id']) if job else [],'reader_checks':jobs.checks(job['id']) if job else [],'visual_checks':jobs.visual.checks(job['id']) if job else []}
 
     @app.get('/api/visual/{id}/{part}')
     def visual_image(id:str,part:str):
@@ -124,7 +124,7 @@ def create_app(path=None):
 
     @app.get('/api/runs/{id}')
     def run_detail(id:str):
-        return {'job':jobs.get(id),'receipt':jobs.receipt(id),'reader_checks':jobs.checks(id),'visual_checks':jobs.visual.checks(id),'events':desktop.events(id)}
+        return {'job':jobs.get(id),'receipt':jobs.receipt(id),'guard_checks':jobs.guards(id),'reader_checks':jobs.checks(id),'visual_checks':jobs.visual.checks(id),'events':desktop.events(id)}
 
     @app.post('/api/permissions/manual')
     def manual(body:Manual):
@@ -174,6 +174,11 @@ def create_app(path=None):
     @app.post('/api/writes')
     def write(body:Proposal):
         return store.submit(body)
+
+    @app.post('/api/permissions/{id}/revoke')
+    def revoke(id:str):
+        store.revoke(id)
+        return {'revoked':True}
 
     @app.post('/api/records')
     def create_record(body:NewRecord):

@@ -6,6 +6,8 @@ import pytest
 
 from iris.agent import Jobs
 from iris.store import Store
+from iris.meta import ModelFailure
+import httpx
 
 JPEG=base64.b64encode(b'\xff\xd8test-fixture\xff\xd9').decode()
 
@@ -63,6 +65,26 @@ def test_visual_outage_blocks_even_an_authorized_form(tmp_path):
     assert result['verdict']=='pause'
     assert result['code']=='invalid_visual_response'
     assert jobs.get(job['id'])['state']=='paused'
+    assert not jobs.visual.consume(job['id'],'local',form)
+    assert store.get('booking','bk-alice').version==1
+
+
+@pytest.mark.parametrize('failure,code',[
+    (ModelFailure('response_incomplete','Truncated response.'),'response_incomplete'),
+    (ModelFailure('provider_http_error','Provider HTTP 429.'),'provider_http_error'),
+    (httpx.ReadTimeout('private network details'),'provider_timeout'),
+    (httpx.ConnectError('private connection details'),'provider_connection'),
+])
+def test_visual_failure_codes_are_distinct_and_never_authorize(tmp_path,failure,code):
+    store,jobs,job,form=setup(tmp_path)
+    class FailedReader:
+        provider='test'
+        model='test-vision'
+        async def json(self,*args,**kwargs): raise failure
+    result=inspect(jobs,job,form,FailedReader())
+    assert result['verdict']=='pause' and result['code']==code
+    assert 'private' not in result['reason']
+    assert jobs.visual.checks(job['id'])[0]['code']==code
     assert not jobs.visual.consume(job['id'],'local',form)
     assert store.get('booking','bk-alice').version==1
 
