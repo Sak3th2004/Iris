@@ -118,15 +118,24 @@ class Jobs:
         job = self.get(id)
         permission = self.store.permission(job['permission_id'])
         reason = hold_reason(permission, form if isinstance(form, dict) else None)
-        return {'hold': reason is not None, 'reason': reason or ''}
+        return {'hold': reason is not None, 'reason': reason or '', 'record_id': getattr(permission, 'record_id', None), 'resource_type': getattr(permission, 'resource_type', None)}
 
     async def preflight(self,id,payload,reader,worker_id):
         self.heartbeat(id,worker_id)
         job=self.get(id)
         result=await self.visual.inspect(job,worker_id,payload,reader)
         self.heartbeat(id,worker_id)  # Stop/lease loss during vision invalidates the result.
-        if result['verdict']!='allow': self.finish(id,'paused',result['reason'])
+        if result['verdict'] != 'allow': self.finish(id,'paused',result['reason'])
         return result
+
+    def allow_fill(self, id, field, value, worker_id):
+        self.heartbeat(id, worker_id)
+        permission = self.store.permission(self.get(id)['permission_id'])
+        expected = permission.set_fields.get(field) if permission else None
+        typed = int(value) if isinstance(expected, int) and isinstance(value, str) and value.isdigit() else value
+        if expected is None or not same(expected, typed):
+            return {'ok': False, 'reason': f'{field} is not an authorized value. It was not typed.'}
+        return {'ok': True, 'reason': ''}
 
     async def submit(self,id,form,meta,worker_id='local',channel='http'):
         if channel not in ('click','enter','http'): raise ValueError('Unknown write channel.')

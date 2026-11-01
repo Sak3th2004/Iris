@@ -53,6 +53,19 @@ def test_visual_guard_rejects_before_click(tmp_path,fault):
     assert store.audit()==[]  # No write even proposed after the pre-click rejection.
 
 
+def test_visual_outage_blocks_even_an_authorized_form(tmp_path):
+    store,jobs,job,form=setup(tmp_path)
+    class Blind:
+        provider='test'
+        model='test-vision'
+        async def json(self,*args,**kwargs): raise ValueError('reader down')
+    result=inspect(jobs,job,form,Blind())
+    assert result['verdict']=='pause'
+    assert result['code']=='invalid_visual_response'
+    assert jobs.get(job['id'])['state']=='paused'
+    assert not jobs.visual.consume(job['id'],'local',form)
+    assert store.get('booking','bk-alice').version==1
+
 def test_visual_disagreement_pauses(tmp_path):
     store,jobs,job,form=setup(tmp_path)
     read=store.get('booking','bk-bob').model_dump()

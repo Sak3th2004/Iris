@@ -7,6 +7,11 @@ import wave
 from uuid import uuid4
 import httpx
 
+class ModelFailure(ValueError):
+    def __init__(self, code, message):
+        self.code = code
+        super().__init__(message)
+
 
 class Meta:
     provider = 'Meta'
@@ -63,23 +68,23 @@ class Meta:
             response = await client.post(self.endpoint, headers={'Authorization':f'Bearer {self.key}'}, json={
                 'model':self.model,'messages':messages,'max_completion_tokens':4096,'response_format':{'type':'json_object'}})
         if response.status_code != 200:
-            raise ValueError(f'{self.provider} returned HTTP {response.status_code}. Nothing was saved; no automatic retry.')
+            raise ModelFailure('provider_http_error',f'{self.provider} returned HTTP {response.status_code}. Nothing was saved; no automatic retry.')
         body = response.json()
         if not isinstance(body, dict):
-            raise ValueError('Provider returned an invalid response envelope. Nothing saved.')
+            raise ModelFailure('invalid_response','Provider returned an invalid response envelope. Nothing saved.')
         usage = body.get('usage', {})
         if isinstance(usage, dict) and all(type(usage.get(k)) is int and usage[k] >= 0 for k in ('prompt_tokens','completion_tokens')):
             self.settle(id, (usage['prompt_tokens'] * 1.25 + usage['completion_tokens'] * 4.25) / 1e6)
         try:
             choice = body['choices'][0]
             if choice.get('finish_reason') != 'stop':
-                raise ValueError('Model response was truncated or refused. Nothing saved.')
+                raise ModelFailure('response_incomplete','Model response was truncated or refused. Nothing saved.')
             answer = json.loads(choice['message']['content'])
             if not isinstance(answer, dict):
-                raise ValueError('Model response must be a JSON object. Nothing saved.')
+                raise ModelFailure('invalid_response','Model response must be a JSON object. Nothing saved.')
             return answer
         except (KeyError, IndexError, TypeError, AttributeError, json.JSONDecodeError):
-            raise ValueError('Muse returned an incomplete response. Please ask again.') from None
+            raise ModelFailure('invalid_response','Muse returned an incomplete response. Please ask again.') from None
 
     async def transcribe(self, audio):
         try:

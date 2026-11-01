@@ -137,6 +137,11 @@ async def main(runtime='docker'):
                             elif kind == 'fill':
                                 field = action['field']
                                 if not observation['open_form'] or field not in observation['open_form']['fields']: raise ValueError('Unknown field selected.')
+                                allowed=await client.post(f'/jobs/{id}/fill',json={'field':field,'value':action['value']})
+                                allowed.raise_for_status()
+                                if not allowed.json().get('ok'):
+                                    await event(id,'held',allowed.json().get('reason') or 'That value was not typed.')
+                                    continue
                                 locator = page.get_by_label(field,exact=True)
                                 await click(locator)
                                 await locator.fill(str(action['value']))
@@ -149,7 +154,16 @@ async def main(runtime='docker'):
                                 if reason:
                                     holds += 1
                                     last_hold = reason
+                                    body=held.json()
                                     await event(id,'held',reason)
+                                    target=body.get('record_id')
+                                    if captured and target and captured.get('record_id')!=target:
+                                        resource=body.get('resource_type')
+                                        tab=page.locator(f'[data-desk="{resource}"]')
+                                        if await tab.get_attribute('aria-pressed')!='true':
+                                            await click(tab)
+                                        await click(page.locator('#records [data-record]').filter(has_text=target))
+                                        await event(id,'opened',f'Left the refused record. Opened {target}.')
                                     if holds >= 3:
                                         await event(id,'paused','The unauthorized click was held three times. Nothing was saved.')
                                         await client.post(f'/jobs/{id}/pause')
@@ -159,7 +173,9 @@ async def main(runtime='docker'):
                                 await aim(button)
                                 await event(id,'visual review','Pointer paused at Save. Spark Open is reading the screen pixels and button before any click.')
                                 captured=await page.evaluate('capture()')
-                                screen=await page.screenshot(type='jpeg',quality=90)
+                                # Element capture includes the header and all fields even
+                                # when the tall inspector extends beyond the viewport.
+                                screen=await page.locator('#inspector').screenshot(type='jpeg',quality=95)
                                 crop=await button.screenshot(type='jpeg',quality=95)
                                 response=await client.post(f'/jobs/{id}/preflight',json={'form':captured,'screen':base64.b64encode(screen).decode(),'button':base64.b64encode(crop).decode()})
                                 response.raise_for_status();review=response.json()

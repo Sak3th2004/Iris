@@ -1,12 +1,12 @@
 import {api} from './api';
-export async function startRecording(options?:{onAutoStop?:()=>void}){
+export async function startRecording(options?:{onAutoStop?:()=>void;parentCaptureId?:string|null}){
   const stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1},video:false});
   const context=new AudioContext({sampleRate:24000});
   let source:MediaStreamAudioSourceNode|undefined,node:AudioWorkletNode|undefined;
   const cleanup=async()=>{source?.disconnect();node?.disconnect();stream.getTracks().forEach(t=>t.stop());await context.close();};
   try{
     await context.resume();await context.audioWorklet.addModule('/static/voice-worklet.js');
-    const capture=await api('voice/start',{}),chunks:Float32Array[]=[];
+    const capture=await api('voice/start',{parent_capture_id:options?.parentCaptureId||null}),chunks:Float32Array[]=[];
     source=context.createMediaStreamSource(stream);node=new AudioWorkletNode(context,'iris-capture');
     let heard=false,speechMs=0,lastVoice=performance.now(),ended=false;
     node.port.onmessage=e=>{

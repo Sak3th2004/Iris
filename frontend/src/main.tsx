@@ -12,7 +12,7 @@ function App(){
   const [snapshot,setSnapshot]=useState<any>(null),[config,setConfig]=useState<any>(null),[permission,setPermission]=useState<Permission|null>(null),[receipt,setReceipt]=useState<any>(null);
   const [voice,setVoice]=useState(false),[recording,setRecording]=useState(false),[capture,setCapture]=useState<string|null>(null);
   const audio=useRef<HTMLAudioElement|null>(null),audioURL=useRef(''),speechRequest=useRef(0),recorder=useRef<Awaited<ReturnType<typeof startRecording>>|null>(null),recordTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
-  const lastJob=useRef(''),busyRef=useRef(false),loaded=useRef(false),thread=useRef<{who:string;text:string}[]>([]),handsFree=useRef(false),spokenEvent=useRef<number|null>(null),spokenJob=useRef('');
+  const lastJob=useRef(''),busyRef=useRef(false),loaded=useRef(false),parentCapture=useRef<string|null>(null),handsFree=useRef(false),spokenEvent=useRef<number|null>(null),spokenJob=useRef('');
   const active=['queued','running'].includes(snapshot?.job?.state);
   const shownPermission=permission||snapshot?.permission;
   useEffect(()=>{
@@ -46,12 +46,10 @@ function App(){
       })();
     });
   }
-  function remember(who:string,text:string){thread.current=[...thread.current,{who,text}].slice(-8);}
-  function composed(latest:string){const prior=thread.current.map(turn=>`${turn.who}: ${turn.text}`).join('\n');return prior?`${prior}\nPerson: ${latest}`:latest;}
   async function openMic(){
-    if(busyRef.current||recorder.current)return;busyRef.current=true;setError('');setVoice(true);handsFree.current=true;setBusy('Listening');
-    try{recorder.current=await startRecording({onAutoStop:()=>{void toggleMic();}});setRecording(true);recordTimer.current=setTimeout(()=>{void toggleMic();},55000);}
-    catch(e){setError((e as Error).message);}finally{busyRef.current=false;setBusy('');}
+    if(recorder.current)return;setError('');setVoice(true);handsFree.current=true;setBusy('Listening');
+    try{recorder.current=await startRecording({parentCaptureId:parentCapture.current,onAutoStop:()=>{void toggleMic();}});setRecording(true);recordTimer.current=setTimeout(()=>{void toggleMic();},55000);}
+    catch(e){setError((e as Error).message);setRecording(false);}finally{setBusy('');}
   }
   async function review(){
     if(!input.trim()||busyRef.current||active)return;busyRef.current=true;setBusy('Spark is checking the exact instruction');setError('');setQuestion('');setPermission(null);
@@ -68,26 +66,24 @@ function App(){
     catch(e){setError((e as Error).message);}finally{busyRef.current=false;setBusy('');}
   }
   async function toggleMic(){
-    if(busyRef.current)return;speechRequest.current++;audio.current?.pause();setError('');busyRef.current=true;
-    if(recorder.current){
-      const current=recorder.current;recorder.current=null;clearTimeout(recordTimer.current);setRecording(false);setBusy('Muse Voice is transcribing');
-      let followup='';
-      try{
-        const data=await current.stop();setInput(data.sentence);setQuestion('');setPermission(null);
-        setBusy('Taking the spoken task');
-        const compiled=await api('permissions/interpret',{sentence:composed(data.sentence),capture_id:data.capture_id});
-        remember('Person',data.sentence);
-        if(compiled.question){setQuestion(compiled.question);setCapture(data.capture_id);remember('Iris',compiled.question);followup=compiled.question;}
-        else{
-          thread.current=[];setCapture(null);setPermission(compiled.permission);
-          await api('runs',{permission_id:compiled.permission.id});
-          setSnapshot(await api('desktop'));setPermission(null);setReceipt(null);
-        }
-        setConfig(await api('state'));
+    if(busyRef.current)return;speechRequest.current++;audio.current?.pause();setError('');
+    if(!recorder.current){await openMic();return;}
+    const current=recorder.current;recorder.current=null;clearTimeout(recordTimer.current);setRecording(false);busyRef.current=true;setBusy('Muse Voice is transcribing');
+    let followup='';
+    try{
+      const data=await current.stop();setInput(data.sentence);setQuestion('');setPermission(null);
+      setBusy('Taking the spoken task');
+      const compiled=await api('permissions/interpret',{sentence:data.sentence,capture_id:data.capture_id});
+      if(compiled.question){setQuestion(compiled.question);setCapture(data.capture_id);parentCapture.current=data.capture_id;followup=compiled.question;}
+      else{
+        parentCapture.current=null;setCapture(null);setPermission(compiled.permission);
+        await api('runs',{permission_id:compiled.permission.id});
+        setSnapshot(await api('desktop'));setPermission(null);setReceipt(null);
       }
-      catch(e){setError((e as Error).message);}finally{busyRef.current=false;setBusy('');}
-      if(followup){await speak(followup);await openMic();}
-    }else await openMic();
+      setConfig(await api('state'));
+    }
+    catch(e){setError((e as Error).message);}finally{busyRef.current=false;setBusy('');}
+    if(followup){await speak(followup);await openMic();}
   }
   const latest=snapshot?.events?.[0];
   useEffect(()=>{
@@ -107,11 +103,11 @@ function App(){
     <main className="workspace"><section className="permission-column">
       <div className="intro"><span className="eyebrow">YOUR DESK · THEIR MACHINE</span><h1>You leave.<br/>The other machine stays.</h1><p>Lock the change. The agent works on a separate desktop.<br/>The right button on the wrong person does not save.</p></div>
       <form className={`composer ${recording?'recording':''}`} onSubmit={e=>{e.preventDefault();void review();}}>
-        <label htmlFor="sentence">Your instruction</label><textarea id="sentence" placeholder={recording?'Listening. Pause when you finish.':'Name the record, the exact change, and what must stay unchanged.'} value={input} onChange={e=>{setInput(e.target.value);setPermission(null);setQuestion('');if(capture)setCapture(null);}} disabled={recording||active||!!busy}/>
+        <label htmlFor="sentence">Your instruction</label><textarea id="sentence" placeholder={recording?'Listening. Pause when you finish.':'Name the record, the exact change, and what must stay unchanged.'} value={input} onChange={e=>{setInput(e.target.value);setPermission(null);setQuestion('');if(capture)setCapture(null);parentCapture.current=null;}} disabled={recording||active||!!busy}/>
         <div className="composer-tools"><button type="button" className={recording?'mic-active':''} disabled={!!busy||active} aria-label={recording?'Stop recording':'Speak your instruction'} onClick={()=>void toggleMic()}>{recording?<Square size={16}/>:<Mic size={18}/>}<span>{recording?'Listening…':'Speak to start'}</span></button><button type="button" disabled={!config?.speech?.configured} aria-label={voice?'Mute spoken feedback':'Enable spoken feedback'} aria-pressed={voice} onClick={()=>{setVoice(!voice);speechRequest.current++;audio.current?.pause();}}>{voice?<Volume2 size={17}/>:<VolumeX size={17}/>}</button></div>
         <button className="primary" id="interpret" type="submit" disabled={!input.trim()||!!busy||active||recording}>Review permission<ArrowRight size={16}/></button>
       </form>
-      {capture&&<p className="capture-note">One detail is missing, so nothing started. Say the full change again, or edit the words and review them.</p>}
+      {capture&&<p className="capture-note">Answer the question by voice. Your original instruction and protected values stay locked to the first recording. Editing starts a new instruction.</p>}
       {busy&&<p className="status" role="status">{busy}</p>}
       {error&&<div className="error" role="alert"><span>{error}</span><button aria-label="Dismiss error" onClick={()=>setError('')}><X size={15}/></button></div>}
       {question&&<section className="ask-state"><span className="eyebrow">PAUSED · ONE DETAIL NEEDED</span><p>{question}</p><small>Update the full instruction above. Nothing has been saved.</small></section>}

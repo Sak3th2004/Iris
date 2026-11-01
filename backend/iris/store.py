@@ -38,6 +38,7 @@ class Store:
                 CREATE TABLE IF NOT EXISTS job_leases(job_id TEXT PRIMARY KEY, worker_id TEXT, expires_at REAL NOT NULL);
                 CREATE TABLE IF NOT EXISTS job_receipts(job_id TEXT PRIMARY KEY, body TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS instruction_captures(id TEXT PRIMARY KEY, records TEXT NOT NULL, captured_at REAL NOT NULL, expires_at REAL NOT NULL, state TEXT NOT NULL, transcript TEXT);
+                CREATE TABLE IF NOT EXISTS capture_threads(capture_id TEXT PRIMARY KEY, root_id TEXT NOT NULL, messages TEXT NOT NULL);
             ''')
             for resource, id, fields in SEED:
                 db.execute("INSERT OR IGNORE INTO records VALUES(?,?,?,1)", (resource, id, json.dumps(fields)))
