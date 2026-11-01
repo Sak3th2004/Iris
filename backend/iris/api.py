@@ -1,6 +1,7 @@
 import os
 import httpx
 import asyncio
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 from dotenv import load_dotenv
@@ -162,7 +163,8 @@ def create_app(path=None):
         if ('day' in fields and value not in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']) or ('quantity' in fields and (type(value) is not int or not 1 <= value <= 100)):
             return {'question':'What exact weekday or quantity from 1 to 100 should I use?'}
         if 'day' in fields:
-            fields = move_to_weekday(row['fields'], value)
+            started=datetime.fromtimestamp(captures.get(body.capture_id)['captured_at'],timezone.utc) if body.capture_id else None
+            fields = move_to_weekday(row['fields'], value,now=started)
         return {'permission':store.lock(sentence,row['resource_type'],row['record_id'],fields,row['version'],capture_id=body.capture_id).model_dump()}
 
     @app.post('/api/speech')

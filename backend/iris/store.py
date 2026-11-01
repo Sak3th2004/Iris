@@ -7,7 +7,7 @@ from .gate import decide
 from .models import Decision, Permission, Proposal, Record
 from .lifecycle import recover_jobs, owns_lease
 from .capture import Captures
-from .schedule import move_to_weekday
+from .schedule import move_to_weekday, overlaps, interval
 
 def booking(name, day, time, service, price):
     fields = {"name": name, "day": day, "time": time, "service": service, "price": price, "host": "Studio", "status": "confirmed", "duration_minutes": 60}
@@ -77,6 +77,11 @@ class Store:
         # Owner-only setup operation; never an agent tool or an edit bypass.
         id = ('bk-' if resource == 'booking' else 'or-') + str(uuid4())[:12]
         with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if resource == 'booking':
+                interval(fields)
+                if any(overlaps(fields,json.loads(r['fields'])) for r in db.execute("SELECT fields FROM records WHERE resource='booking'")):
+                    raise ValueError('That appointment overlaps an existing booking on this host.')
             db.execute('INSERT INTO records VALUES(?,?,?,1)', (resource,id,json.dumps(fields)))
             return self._get(db,resource,id)
 
@@ -114,12 +119,14 @@ class Store:
             decision = decide(permission, proposal, before)  # Exactly one decision, inside the write transaction.
             if decision.verdict == "allow" and proposal.resource_type == "booking":
                 merged = before.fields | proposal.fields
-                start, host = merged.get("starts_at"), merged.get("host", "Studio")
-                for other in db.execute("SELECT id, fields FROM records WHERE resource='booking' AND id!=?", (proposal.record_id,)):
-                    booked = json.loads(other["fields"])
-                    if booked.get("status", "confirmed") != "cancelled" and booked.get("starts_at") == start and booked.get("host", "Studio") == host:
-                        decision = Decision(verdict="reject", code="slot_taken", reason="That time is already booked on this host. Nothing was saved.")
-                        break
+                try:
+                    interval(merged)
+                    for other in db.execute("SELECT fields FROM records WHERE resource='booking' AND id!=?", (proposal.record_id,)):
+                        if overlaps(merged,json.loads(other['fields'])):
+                            decision = Decision(verdict="reject", code="slot_taken", reason="That appointment overlaps an existing booking on this host. Nothing was saved.")
+                            break
+                except (ValueError,TypeError):
+                    decision = Decision(verdict='reject',code='invalid_schedule',reason='The booking has an invalid time or duration. Nothing was saved.')
             if decision.verdict == "allow":
                 db.execute("UPDATE records SET fields=?,version=version+1 WHERE resource=? AND id=?", (json.dumps(before.fields | proposal.fields), proposal.resource_type, proposal.record_id))
                 db.execute("UPDATE permissions SET active=0 WHERE id=?", (permission.id,))

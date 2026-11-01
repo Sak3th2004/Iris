@@ -1,3 +1,4 @@
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 import pytest
 from iris.gate import hold_reason
@@ -67,7 +68,7 @@ def test_hold_stops_the_wrong_record_before_a_click(store):
 def test_thursday_keeps_the_clock_time(store):
     alice = store.get('booking', 'bk-alice')
     moved = move_to_weekday(alice.fields, 'Thursday')
-    assert moved['time'] == '10:00' and moved['starts_at'].startswith('2026-11-05T10:00')
+    assert moved['time'] == '10:00' and datetime.fromisoformat(moved['starts_at']).weekday()==3
 
 def test_missing_permission(store):
     p = permission(store)

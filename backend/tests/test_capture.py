@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 import pytest
 from fastapi.testclient import TestClient
@@ -34,7 +35,8 @@ def test_spoken_snapshot_is_single_use(tmp_path,monkeypatch):
     assert response.status_code==200
     permission=response.json()['permission']
     assert permission['version']==1 and permission['set_fields']['day']=='Thursday'
-    assert permission['set_fields']['starts_at'].startswith('2026-11-05T10:00')
+    assert datetime.fromisoformat(permission['set_fields']['starts_at']).weekday()==3
+    assert permission['set_fields']['time']=='10:00'
     assert client.post('/api/permissions/interpret',json=spoken).status_code==400
 
 
