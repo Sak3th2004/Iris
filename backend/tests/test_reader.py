@@ -36,6 +36,20 @@ def test_baseten_exact_model_content_and_separate_budget(tmp_path, monkeypatch):
     assert Meta(store).status()['committed_usd'] == 0
 
 
+def test_baseten_pixel_read_keeps_original_image_resolution(tmp_path,monkeypatch):
+    monkeypatch.setenv('BASETEN_API_KEY','test-only-key')
+    reader=Baseten(Store(tmp_path/'resolution.sqlite'))
+    def respond(request):
+        body=json.loads(request.content)
+        images=body['messages'][1]['content'][1:]
+        assert len(images)==2
+        assert all(image['image_url']['detail']=='original' for image in images)
+        return httpx.Response(200,json={'choices':[{'finish_reason':'stop','message':{'content':'{"question":"fixture"}'}}]})
+    original=httpx.AsyncClient
+    monkeypatch.setattr(httpx,'AsyncClient',lambda **kw:original(transport=httpx.MockTransport(respond),**kw))
+    assert asyncio.run(reader.json('Read pixels',{},'visual_preclick',images=['data:image/jpeg;base64,fixture']*2))=={'question':'fixture'}
+
+
 def test_budget_reservations_are_atomic_and_reject_invalid_limits(tmp_path, monkeypatch):
     monkeypatch.setenv('BASETEN_API_KEY', 'test-only-key')
     monkeypatch.setenv('IRIS_BASETEN_SPEND_LIMIT_USD', '.03')

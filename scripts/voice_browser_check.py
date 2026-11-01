@@ -4,6 +4,7 @@ import json
 import subprocess
 import time
 import wave
+from itertools import product
 from pathlib import Path
 import httpx
 from playwright.sync_api import sync_playwright, expect
@@ -14,7 +15,7 @@ with httpx.Client(base_url=base,timeout=100) as client:
     assert client.get('/api/desktop').json()['connected'], 'Start the isolated desktop before spending on voice.'
     state=client.get('/api/state').json()
     names={r['fields']['name'] for r in state['records']}
-    name=next(n for n in ['Nora Vale','Tara Benton','Mina Corwin','Lena Arden','Nia Rowe'] if n not in names)
+    name=next(first+' '+last for first,last in product(['Avery','Mira','Nolan','Lena','Nia'],['Quinn','Hayes','Reed','Vale','Rowe']) if first+' '+last not in names)
     occupied=[int(r['fields'].get('time','10:00')[:2])*60+int(r['fields'].get('time','10:00')[3:]) for r in state['records'] if r['resource_type']=='booking' and r['fields'].get('day') in ('Monday','Thursday')]
     test_time=next(f'{hour:02}:15' for hour in range(6,24) if all(abs(hour*60+15-minute)>=60 for minute in occupied))
     response=client.post('/api/records',json={'resource_type':'booking','name':name,'detail':'Invented studio review','price':194,'time':test_time})

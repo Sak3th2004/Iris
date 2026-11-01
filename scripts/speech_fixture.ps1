@@ -1,4 +1,5 @@
 param([Parameter(Mandatory=$true)][string]$Sentence)
+$ErrorActionPreference = 'Stop'
 # Synthetic speech fixture only. Never presented as a human microphone recording.
 $fixtureRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\artifacts'))
 [IO.Directory]::CreateDirectory($fixtureRoot) | Out-Null

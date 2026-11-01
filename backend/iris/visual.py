@@ -27,8 +27,8 @@ class VisualGuard:
 
     def checks(self, job_id):
         with self.store.connect() as db:
-            rows=db.execute('SELECT id,verdict,code,reason,provider,model,elapsed_ms,answer FROM visual_checks WHERE job_id=? ORDER BY created DESC',(job_id,))
-            return [dict(r)|{'answer':json.loads(r['answer'])} for r in rows]
+            rows=db.execute('SELECT id,verdict,code,reason,provider,model,elapsed_ms,form,answer FROM visual_checks WHERE job_id=? ORDER BY created DESC',(job_id,))
+            return [dict(r)|{'form':json.loads(r['form']),'answer':json.loads(r['answer'])} for r in rows]
 
     def image(self, id, part):
         if part not in ('screen','button'): raise ValueError('Unknown visual evidence image.')

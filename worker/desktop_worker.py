@@ -44,6 +44,7 @@ async def main(runtime='docker'):
                 else: await route.abort()
             await context.route('**/*',restrict)
             page = context.pages[0] if context.pages else await context.new_page()
+            capture_session=await context.new_cdp_session(page)
             for attempt in range(30):
                 try:
                     response=await client.get('/records',timeout=5)
@@ -174,7 +175,10 @@ async def main(runtime='docker'):
                                 captured=await page.evaluate('capture()')
                                 # Element capture includes the header and all fields even
                                 # when the tall inspector extends beyond the viewport.
-                                screen=await page.locator('#inspector').screenshot(type='jpeg',quality=95)
+                                await page.evaluate('document.fonts.ready')
+                                clip=await page.locator('#inspector').evaluate('(el)=>{const r=el.getBoundingClientRect();return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height,scale:2}}')
+                                rendered=await capture_session.send('Page.captureScreenshot',{'format':'jpeg','quality':95,'clip':clip,'captureBeyondViewport':True})
+                                screen=base64.b64decode(rendered['data'])
                                 crop=await button.screenshot(type='jpeg',quality=95)
                                 response=await client.post(f'/jobs/{id}/preflight',json={'form':captured,'screen':base64.b64encode(screen).decode(),'button':base64.b64encode(crop).decode()})
                                 response.raise_for_status();review=response.json()

@@ -24,7 +24,10 @@ with sync_playwright() as p:
     page.get_by_label('service',exact=True).fill(changed)
     assert page.locator('#form textarea').evaluate_all('(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2)')
     assert page.evaluate('capture().fields.service')==changed
-    page.locator('#inspector').screenshot(path=str(root/'artifacts/long-form-fixture.png'))
+    page.get_by_role('button',name='Save',exact=True).scroll_into_view_if_needed()
+    clip=page.locator('#inspector').evaluate('(e)=>{const r=e.getBoundingClientRect();return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height,scale:2}}')
+    image=page.context.new_cdp_session(page).send('Page.captureScreenshot',{'format':'jpeg','quality':95,'clip':clip,'captureBeyondViewport':True})
+    (root/'artifacts/high-resolution-form.jpg').write_bytes(__import__('base64').b64decode(image['data']))
     assert page.locator('#form textarea').evaluate_all('(els)=>els.every(el=>el.scrollHeight<=el.clientHeight+2)'), 'Screenshot must not clip values after layout settles.'
     assert not errors,errors
     browser.close()

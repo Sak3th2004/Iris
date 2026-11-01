@@ -4,6 +4,7 @@ from .meta import Meta
 
 
 class Baseten(Meta):
+    image_detail = 'original'
     provider = 'Baseten'
     model = 'meta-models/muse-spark-open-1026'
     endpoint = 'https://inference.baseten.co/v1/chat/completions'

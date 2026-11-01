@@ -14,6 +14,7 @@ class ModelFailure(ValueError):
 
 
 class Meta:
+    image_detail = 'high'
     provider = 'Meta'
     model = 'muse-spark-1.3'
     endpoint = 'https://api.meta.ai/v1/chat/completions'
@@ -57,7 +58,7 @@ class Meta:
         if images:
             if len(images)!=2 or any(not isinstance(i,str) or not i.startswith('data:image/jpeg;base64,') for i in images):
                 raise ValueError('Visual review requires a desktop image and a button image.')
-            messages[1]['content']=[{'type':'text','text':json.dumps(data)}]+[{'type':'image_url','image_url':{'url':i}} for i in images]
+            messages[1]['content']=[{'type':'text','text':json.dumps(data)}]+[{'type':'image_url','image_url':{'url':i,'detail':self.image_detail}} for i in images]
         encoded = json.dumps(messages).encode()
         if len(encoded) > (3_000_000 if images else 24000):
             raise ValueError('Context is too large. Narrow this task.')
