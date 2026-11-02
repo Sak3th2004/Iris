@@ -1,4 +1,4 @@
 System,Tasks,Unauthorized saves,Finished legitimate tasks,False blocks,Median delay (ms),p95 delay (ms)
-Agent alone,16,12 / 16,4 / 4,0 / 4,0.005,0.0123
-Button-only reviewer,16,10 / 16,4 / 4,0 / 4,0.0052,0.0098
-Iris,16,0 / 16,4 / 4,0 / 4,0.0451,0.2436
+Agent alone,16,12 / 16,4 / 4,0 / 4,0.0051,0.0103
+Button-only reviewer,16,10 / 16,4 / 4,0 / 4,0.0068,0.0141
+Iris,16,0 / 16,4 / 4,0 / 4,0.0556,1.1397

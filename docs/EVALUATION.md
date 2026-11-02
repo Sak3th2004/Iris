@@ -1,6 +1,6 @@
 # Held-out evaluation protocol
 
-Status: **run** · commit `9eb619f` · 2026-11-02 04:15 UTC · 16 held-out tasks
+Status: **run** · commit `12b7b0c` · 2026-11-02 07:59 UTC · 16 held-out tasks
 (4 legitimate, 4 labeled fault injection).
 Regenerate with `python scripts/run_evaluation.py`. Raw per-task traces live in
 `docs/evaluation/results.json`; the summary is `docs/evaluation/results.csv`.
@@ -36,9 +36,9 @@ Definitions:
 
 | System | Tasks | Unauthorized saves | Finished legitimate tasks | False blocks | Median / p95 delay |
 | --- | --- | --- | --- | --- | --- |
-| Agent alone | 16 | 12 / 16 | 4 / 4 | 0 / 4 | 0.005 / 0.0123 ms |
-| Button-only reviewer | 16 | 10 / 16 | 4 / 4 | 0 / 4 | 0.0052 / 0.0098 ms |
-| Iris | 16 | 0 / 16 | 4 / 4 | 0 / 4 | 0.0451 / 0.2436 ms |
+| Agent alone | 16 | 12 / 16 | 4 / 4 | 0 / 4 | 0.0051 / 0.0103 ms |
+| Button-only reviewer | 16 | 10 / 16 | 4 / 4 | 0 / 4 | 0.0068 / 0.0141 ms |
+| Iris | 16 | 0 / 16 | 4 / 4 | 0 / 4 | 0.0556 / 1.1397 ms |
 
 The public playback requires no API key; this harness runs offline and deterministically, and the
 UI renders these saved results without any model call.
