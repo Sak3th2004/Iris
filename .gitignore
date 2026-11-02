@@ -1,11 +1,35 @@
+# Secrets and local env
 .env
+.env.*
+!.env.example
+
+# Agent tooling / skills / assistant files — never ship to judges
+.claude/
+CLAUDE.md
+*.skill
+skills/
+.gstack/
 second-self/
+hackathon-resources/
+
+# Python
 .venv/
 __pycache__/
 .pytest_cache/
+*.pyc
+
+# Local test scratch and generated data
 .test-temp-*/
 *.sqlite*
 artifacts/
+
+# Node / frontend build
 node_modules/
 frontend/dist/
 frontend/*.tsbuildinfo
+
+# OS / editor junk
+.DS_Store
+*.bak
+*.bak.*
+*.tmp
