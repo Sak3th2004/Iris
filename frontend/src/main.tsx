@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import {ArrowRight,Check,History,Mic,Monitor,ShieldCheck,Square,Volume2,VolumeX,X} from 'lucide-react';
 import {Desktop} from './Desktop';
 import {WriteComparison} from './WriteComparison';
+import {Evaluation} from './Evaluation';
 import {api} from './api';
 import {startRecording} from './recorder';
 import {useSpeech} from './useSpeech';
@@ -13,6 +14,7 @@ function App(){
   const [input,setInput]=useState(''),[busy,setBusy]=useState(''),[error,setError]=useState(''),[question,setQuestion]=useState('');
   const [snapshot,setSnapshot]=useState<any>(null),[config,setConfig]=useState<any>(null),[permission,setPermission]=useState<Permission|null>(null),[receipt,setReceipt]=useState<any>(null);
   const [voice,setVoice]=useState(true),[recording,setRecording]=useState(false),[capture,setCapture]=useState<string|null>(null);
+  const [view,setView]=useState<'workspace'|'evaluation'>('workspace');
   const recorder=useRef<Awaited<ReturnType<typeof startRecording>>|null>(null),recordTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
   const lastJob=useRef(''),busyRef=useRef(false),loaded=useRef(false),parentCapture=useRef<string|null>(null),handsFree=useRef(false),spokenEvent=useRef<number|null>(null),spokenJob=useRef('');
   const openingMic=useRef(false),interaction=useRef(0);
@@ -99,12 +101,13 @@ function App(){
     const job=receipt?.job?.id;if(!voice||!handsFree.current||!receipt?.receipt||!job||job===spokenJob.current)return;
     spokenJob.current=job;const after=receipt.receipt.after;void speak(`${after.fields.name}. ${after.fields.day||'Quantity '+after.fields.quantity}. Saved.`);
   },[receipt]);
+  if(view==='evaluation')return <Evaluation onBack={()=>setView('workspace')}/>;
   const held=active && latest?.action==='held';
   const checking=active && latest?.action==='visual review';
   const verdict=permission?'Ready for review':snapshot?.job?.state==='complete'?'Allowed & verified':snapshot?.job?.state==='paused'?'Paused':snapshot?.job?.state==='stopped'?'Stopped':active?'In progress':'Awaiting instruction';
   const audit=(config?.audit||[]).filter((a:any)=>a.proposal?.permission_id===shownPermission?.id);
   return <div className="app">
-    <header className="topbar"><a href="/" className="wordmark" aria-label="Iris home">iris<span>PERMISSION AT THE WRITE</span></a><div className="topbar-right"><span className="provider"><i className={config?.meta?.configured&&config?.reader?.configured?'green-dot':'grey-dot'}/>{config?.meta?.configured?'Muse Spark':'Meta not connected'} · {config?.reader?.configured?'Blind reader connected':'Reader not connected'}</span><a className="session-button" href="/classic">Manage invented records<ArrowRight size={14}/></a></div></header>
+    <header className="topbar"><a href="/" className="wordmark" aria-label="Iris home">iris<span>PERMISSION AT THE WRITE</span></a><div className="topbar-right"><span className="provider"><i className={config?.meta?.configured&&config?.reader?.configured?'green-dot':'grey-dot'}/>{config?.meta?.configured?'Muse Spark':'Meta not connected'} · {config?.reader?.configured?'Blind reader connected':'Reader not connected'}</span><button className="session-button" onClick={()=>setView('evaluation')}><ShieldCheck size={14}/>Evaluation</button><a className="session-button" href="/classic">Manage invented records<ArrowRight size={14}/></a></div></header>
     <main className="workspace"><section className="permission-column">
       <div className="intro"><span className="eyebrow">YOUR DESK · THEIR MACHINE</span><h1>You leave.<br/>The other machine stays.</h1><p>Lock the change. The agent works on a separate desktop.<br/>The right button on the wrong person does not save.</p></div>
       <form className={`composer ${recording?'recording':''}`} onSubmit={e=>{e.preventDefault();void review();}}>

@@ -9,6 +9,13 @@
   --green:#d7e2c8;
   --glass:rgba(18,22,28,.55);
   --serif:Georgia,"Iowan Old Style",serif;
+  --danger:#f0b2a6;
+  --danger-bg:rgba(120,40,30,.35);
+  /* Motion tokens — mirrors frontend/src/motion.ts (Second Self DESIGN.md springs). */
+  --spring-panel:cubic-bezier(.22,1,.36,1);
+  --spring-reveal:cubic-bezier(.2,.9,.3,1);
+  --spring-micro:cubic-bezier(.3,1.2,.5,1);
+  --spring-character:cubic-bezier(.34,1.56,.64,1);
 }
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:
@@ -140,10 +147,13 @@ textarea::placeholder{color:#8d877e}
   .session-button:hover{background:rgba(255,255,255,.08)}
 }
 @media(prefers-reduced-motion:no-preference){
-  button{transition:transform 160ms ease-out,background-color 160ms ease-out}
-  button:not(:disabled):active{transform:scale(.98)}
-  .desktop-shell{transition:box-shadow 400ms ease-out}
+  button{transition:transform 200ms var(--spring-micro),background-color 160ms ease-out}
+  button:not(:disabled):active{transform:scale(.97)}
+  .desktop-shell{transition:box-shadow 420ms var(--spring-panel)}
+  .permission,.receipt,.ask-state,.attack-result,.visual-evidence{animation:iris-reveal 360ms var(--spring-reveal) both}
+  .verdict,.ev-chip{transition:color 320ms var(--spring-reveal)}
 }
+@keyframes iris-reveal{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
 @media(max-width:1100px){
   .workspace{grid-template-columns:300px minmax(0,1fr);gap:18px;padding-inline:18px}
   .topbar,.app-footer{margin-inline:18px}
@@ -160,3 +170,68 @@ textarea::placeholder{color:#8d877e}
 
 .write-comparison{border:1px solid var(--line,#deded8);border-radius:16px;background:var(--glass);margin:16px 0;padding:20px}.comparison-scroll{overflow-x:auto}.write-comparison table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}.write-comparison th,.write-comparison td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;max-width:230px;overflow-wrap:anywhere}.write-comparison thead th{font-size:11px;color:var(--muted);font-weight:500}.write-comparison tbody th{font-weight:500}.write-comparison th small{display:block;font-size:9px;letter-spacing:.07em;color:var(--muted);margin-top:4px}.write-comparison .mismatch{background:#48291f;color:#ffd5c5}.write-comparison .matched{color:#d7e2c8;background:#1e2c26}.comparison-version{font-size:11px;color:var(--muted);margin:14px 0 0}.activity-row p small{display:block;margin-top:5px}.write-comparison .section-title{align-items:start;gap:12px}
 @media(max-width:600px){.write-comparison{padding:12px}.write-comparison table{min-width:720px}.write-comparison .section-title{display:block}.write-comparison .section-title span{display:block;margin:8px 0}}
+
+/* ---- Held-out evaluation view ---- */
+.evaluation-body{max-width:1180px;margin:auto;padding:4px 28px 60px}
+.evaluation .intro{padding:8px 0 10px}
+.evaluation h1{font-size:46px}
+.ev-provenance{display:block;margin-top:10px;font-size:11px;color:var(--muted);letter-spacing:.3px}
+.scoreboard{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:22px 0}
+.score-card{border:1px solid var(--line);border-radius:20px;padding:18px;background:var(--glass);backdrop-filter:blur(22px) saturate(1.3)}
+.score-card.iris{border-color:rgba(215,226,200,.7);box-shadow:0 0 0 1px rgba(215,226,200,.35),0 24px 60px rgba(0,0,0,.3)}
+.score-card.baseline{opacity:.92}
+.score-card header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.score-card.iris header svg{color:var(--green)}
+.score-card.baseline header svg{color:var(--danger)}
+.score-card h2{font-size:17px;font-family:Inter,sans-serif;font-weight:650;margin:0;letter-spacing:-.2px}
+.ev-metric{display:flex;flex-direction:column;gap:2px;padding:8px 0}
+.ev-metric strong{font-family:var(--serif);font-size:30px;font-weight:400;letter-spacing:-.5px}
+.ev-metric span{font-size:11px;color:var(--muted);letter-spacing:.3px}
+.ev-metric.danger strong{color:var(--danger)}
+.ev-metric.safe strong{color:var(--green)}
+.ev-metric-row{display:flex;gap:16px;border-top:1px solid var(--line);margin-top:6px}
+.ev-metric-row .ev-metric{flex:1}
+.ev-metric-row .ev-metric strong{font-size:22px}
+.ev-delay{font-size:11px;color:var(--muted);margin:10px 0 0;border-top:1px solid var(--line);padding-top:10px}
+.attack-lab{margin:26px 0}
+.attack-buttons{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 16px}
+.attack-btn{flex:1 1 180px;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--glass);text-align:left}
+.attack-btn strong{font-size:13px}
+.attack-btn small{font-size:11px;color:var(--muted);line-height:1.4}
+.attack-btn.selected{border-color:rgba(215,226,200,.7);background:rgba(215,226,200,.08)}
+.attack-btn.running{opacity:.6}
+.attack-result{border:1px solid var(--line);border-radius:18px;padding:18px;background:var(--glass)}
+.attack-instruction{font-family:var(--serif);font-size:19px;margin:0 0 14px;line-height:1.4}
+.attack-tag{font-family:Inter,sans-serif;font-size:9px;letter-spacing:1.3px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 8px;margin-left:8px;white-space:nowrap}
+.attack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.attack-cell{border:1px solid var(--line);border-radius:14px;padding:14px}
+.attack-cell.danger{border-color:rgba(240,180,160,.5);background:var(--danger-bg)}
+.attack-cell.safe{border-color:rgba(215,226,200,.5);background:#1e2c26}
+.attack-cell.ok{border-color:rgba(215,226,200,.3)}
+.attack-cell-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:650;margin-bottom:10px}
+.attack-cell p{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.5}
+.ev-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;border-radius:999px;padding:5px 10px}
+.ev-chip.danger{background:rgba(120,40,30,.5);color:#f6d2c8}
+.ev-chip.safe{background:rgba(60,110,80,.35);color:#c4e6cf}
+.ev-chip.ok{background:rgba(215,226,200,.14);color:var(--green)}
+.attack-verdict{font-size:13px;color:#f4f1ea;margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+.task-table{margin-top:20px}
+.task-table table{width:100%;border-collapse:collapse;text-align:left;font-size:12px;margin-top:12px}
+.task-table th,.task-table td{padding:9px 12px;border-bottom:1px solid var(--line)}
+.task-table thead th{font-size:11px;color:var(--muted);font-weight:500}
+.task-table tbody th{font-weight:500;text-transform:capitalize}
+.task-table tbody th small{display:block;font-size:9px;letter-spacing:.07em;color:var(--muted);margin-top:3px;text-transform:uppercase}
+.task-table .mismatch{background:#48291f;color:#ffd5c5}
+.task-table .matched{color:#d7e2c8;background:#1e2c26}
+/* Reactive Iris symbol — feedback, not a mascot. Settles with Second Self's character spring. */
+.iris-glyph{display:inline-block;color:var(--green);font-size:15px;line-height:1}
+@media(prefers-reduced-motion:no-preference){
+  .iris-glyph{transition:transform 380ms var(--spring-character),color 320ms var(--spring-reveal)}
+  .iris-glyph.calm{animation:iris-breathe 3.2s ease-in-out infinite}
+  .iris-glyph.allow{color:#b7d7a8;transform:scale(1.1)}
+  .iris-glyph.reject{color:var(--danger);animation:iris-flinch 420ms var(--spring-character) 1}
+  .iris-glyph.pause{color:#e6d09a;transform:rotate(-8deg)}
+}
+@keyframes iris-breathe{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes iris-flinch{0%{transform:scale(1)}30%{transform:scale(.7) rotate(-10deg)}100%{transform:scale(1.05) rotate(0)}}
+@media(max-width:820px){.scoreboard,.attack-grid{grid-template-columns:1fr}.evaluation-body{padding-inline:16px}}
