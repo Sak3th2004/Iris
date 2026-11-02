@@ -1,3 +1,4 @@
+import json
 import os
 import httpx
 import asyncio
@@ -20,6 +21,7 @@ from .capture import Captures
 from .stream import desktop_owner
 from .speech import Speech
 from .schedule import move_to_weekday
+from . import evaluation
 
 ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / '.env')
@@ -52,6 +54,9 @@ class Run(Model):
 
 class SpokenReply(Model):
     text: str = Field(min_length=1,max_length=2500)
+
+class Attack(Model):
+    task_id: str = Field(min_length=1, max_length=16)
 
 
 def create_app(path=None):
@@ -96,6 +101,21 @@ def create_app(path=None):
         if len(os.getenv('IRIS_WORKER_TOKEN',''))<32: raise ValueError('Connect the isolated VM worker first. See docs/VM.md.')
         if not desktop.status()['connected']: raise ValueError('The VM browser is disconnected. Start the worker before sending a task.')
         return jobs.create(body.permission_id,require_visual=True)
+
+    @app.get('/api/evaluation')
+    def evaluation_results():
+        # Serve the frozen, committed results so the comparison renders with no API key.
+        saved = ROOT / 'docs' / 'evaluation' / 'results.json'
+        if saved.exists():
+            return JSONResponse(json.loads(saved.read_text(encoding='utf-8')))
+        return evaluation.evaluate()  # Deterministic fallback if the artifact was not generated.
+
+    @app.post('/api/evaluation/attack')
+    def evaluation_attack(body:Attack):
+        # Run one held-out task live through all three systems on disposable in-memory snapshots.
+        task = next((t for t in evaluation.manifest() if t['id']==body.task_id), None)
+        if not task: raise ValueError('Unknown evaluation task.')
+        return evaluation.run_task(task)
 
     @app.get('/api/desktop')
     def desktop_status():
