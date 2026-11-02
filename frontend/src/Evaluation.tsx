@@ -62,6 +62,13 @@ export function Evaluation({onBack}:{onBack:()=>void}){
       </section>
 
       {error&&<div className="error" role="alert"><span>{error}</span></div>}
+      {!data&&!error&&<p className="status" role="status">Loading held-out results…</p>}
+
+      {data&&<div className="ev-headline">
+        <span><strong className="danger">{data.systems.agent_alone.unauthorized_saves.count}</strong> unauthorized saves by the unguarded agent</span>
+        <span><strong className="danger">{data.systems.button_only.unauthorized_saves.count}</strong> slipped past button-only review</span>
+        <span><strong className="safe">{data.systems.iris.unauthorized_saves.count}</strong> past Iris</span>
+      </div>}
 
       {data&&<section className="scoreboard">
         {ORDER.map(name=>{

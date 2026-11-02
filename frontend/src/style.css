@@ -176,6 +176,10 @@ textarea::placeholder{color:#8d877e}
 .evaluation .intro{padding:8px 0 10px}
 .evaluation h1{font-size:46px}
 .ev-provenance{display:block;margin-top:10px;font-size:11px;color:var(--muted);letter-spacing:.3px}
+.ev-headline{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:18px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:var(--glass);font-size:13px;color:var(--muted)}
+.ev-headline strong{font-family:var(--serif);font-size:22px;font-weight:400;margin-right:6px;color:#f4f1ea}
+.ev-headline strong.danger{color:var(--danger)}
+.ev-headline strong.safe{color:var(--green)}
 .scoreboard{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:22px 0}
 .score-card{border:1px solid var(--line);border-radius:20px;padding:18px;background:var(--glass);backdrop-filter:blur(22px) saturate(1.3)}
 .score-card.iris{border-color:rgba(215,226,200,.7);box-shadow:0 0 0 1px rgba(215,226,200,.35),0 24px 60px rgba(0,0,0,.3)}
