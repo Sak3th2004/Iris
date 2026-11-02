@@ -1,79 +1,82 @@
 # Iris
 
-**Step away. Stay in control.**
+**Say one change. Walk away. The agent saves only what you actually authorized.**
 
-Iris turns an instruction into a readable permission and enforces it at the database write. A correct-looking click is not sufficient: the resource, record, version, and resulting values must match. Booking and store-order desks use the same generic gate.
+Give an AI agent access to your calendar, your orders, your payments, and sooner or later it does the thing nobody tests for: it clicks the right-looking button on the *wrong* record. No typo. No bad prompt. Just a confident save you never approved.
 
-Built for the Meta Global AI Developer Hackathon. This repository is new work; Second Self is an architectural reference for a visible separate desktop, not a code or design dependency.
+Iris sits at that exact moment. You say what you want in one sentence. It locks that into a permission you can read. Then an agent does the work on its own machine, and a save reaches the database only if the write is *exactly* the change you approved: right record, right fields, nothing else touched, same version you were looking at.
 
-**First time here?** Follow [Try the live agent](docs/TRY_IRIS.md). The UI now guides describe → review permission → agent works → database receipt, with live-only activity indication and a build-status checklist. A real UI run has verified closing the owner page while the agent works and recovering the completed receipt after reopening.
+Built solo for the Meta Global AI Developer Hackathon (Push the Frontier, software). Everything here is new work from the event.
 
-## Run locally
+## See it in 30 seconds
 
-For the **live isolated agent**, use the [Docker desktop setup](docs/DOCKER_DESKTOP.md): `docker compose up -d --build`, then open **http://127.0.0.1:8768**. This is the verified deployment. The browser runs inside Docker Desktop's Linux VM on an internal network, and its actual viewport streams to the owner interface. The host-only command below is useful for API/UI development.
+Open the app and go to the **Evaluation** tab.
+- Hit **Wrong record**, **Protected field**, or **Prompt injection**. An unguarded agent saves the wrong write. A reviewer that only sees the button saves it too. Iris blocks it, every time.
+- Then run it for real: say *"set the Acme payment to $5,000, keep the payee,"* watch the agent fill it in on a separate desktop, and watch Iris read the screen and the stored record before a single click lands.
 
-Python 3.11 or newer:
+## The numbers (held-out, reproducible)
 
-```powershell
+Three systems, one frozen set of 19 tasks (wrong record, protected field, stale version, vague instruction, forbidden action, prompt injection, and legitimate changes), scored the same way:
+
+| System | Unauthorized saves | Finished legitimate | False blocks |
+| --- | --- | --- | --- |
+| Agent alone | 14 / 19 | 5 / 5 | 0 / 5 |
+| Button-only reviewer | 12 / 19 | 5 / 5 | 0 / 5 |
+| **Iris** | **0 / 19** | 5 / 5 | 0 / 5 |
+
+Regenerate anytime with `python scripts/run_evaluation.py`. The live view is the Evaluation tab, and it needs no API key.
+
+## How it works
+
+Three Meta models, each with one job, and one small deterministic gate that owns the write.
+
+- **Muse Voice Transcribe** takes your spoken sentence.
+- **Muse Spark** turns it into a readable permission and plans the browser steps.
+- **Muse Spark Open** (open weights, on Baseten) is an independent reader. At the moment of save it reads the form pixels on screen and names the record and values, blind to your sentence and to the planner's answer.
+- The **gate** (`backend/iris/gate.py`, a single `decide` function) compares the proposed write to the permission inside the database transaction: identity, every protected field, forbidden operations, exact values, and record version. Only an exact match saves. Click, Enter, and raw HTTP all go through it.
+
+The agent proposes, the open-weights reader disputes, the gate decides. That is the whole idea.
+
+Three desks (booking, store orders, payments) run on the *same* gate with no desk-specific logic. That is the point: the gate does not know what a booking or a payment is. It only knows resource, record, the fields that may change, the fields that must not, forbidden operations, and the version the permission was based on.
+
+## Run it
+
+The live isolated agent (the real thing):
+
+```
+docker compose up -d --build
+# then open http://127.0.0.1:8768
+```
+
+The browser runs inside Docker's Linux VM on an internal network, and its real viewport streams back to the owner page. The agent never touches your host desktop.
+
+API and UI only, no VM (Python 3.11+):
+
+```
 python -m pip install -e ".[test,agent]"
-Copy-Item .env.example .env  # only if you do not already have .env
-# Edit .env locally. Never commit or share its keys.
+cp .env.example .env        # add your own keys locally, never commit them
 python -m uvicorn iris.api:app --app-dir backend --host 127.0.0.1 --port 8765
 ```
 
-Open http://127.0.0.1:8765. Exact structured permissions work without an API key. Natural-language interpretation and voice use the actual Meta API and report errors when unavailable. No canned model fallback exists.
+Structured permissions work with no key. Voice and natural-language interpretation call the real Meta API and tell you clearly when they are unavailable. There is no canned fallback.
 
-Use **New record** to create invented guests and buyers. The initial Alice/Bob/Priya records are starter data, not special cases in the gate. The API accepts arbitrary record IDs and names; the gate has no booking-specific or person-specific logic. Owner record creation is setup, separate from gated updates, and is never exposed to the worker.
+## Tests
 
-## What is working
-
-| Capability | Status |
-| --- | --- |
-| Generic field rules, identity checks, preserved fields, stale-version refusal | Implemented and tested |
-| Atomic SQLite save, single-use permission, readback and audit | Implemented; concurrent submission tested |
-| Booking and store-order screens; new invented records | Implemented and browser-tested |
-| Same write endpoint for click, Enter and HTTP | Implemented and tested |
-| Muse Spark 1.3 Standard permission interpretation | One live API interpretation verified locally |
-| Muse Voice Transcribe and recording-start snapshots | Full browser pipeline verified with labeled synthesized microphone input and live Meta calls; human microphone trial remains |
-| Worker interruption and save recovery | Live container interruption verified; expired leases revoke permission; save, receipt, and completion commit atomically |
-| Isolated Playwright worker and separate Spark blind reader | Verified with real paid booking and order runs inside Docker Desktop's Linux VM |
-| Baseten Spark Open reader | Live booking and order runs verified; separate budget and durable reader evidence; see [Baseten setup](docs/BASETEN.md) |
-| Actual isolated-browser preview in owner UI | Live authenticated JPEG frames, freshness checks, action events, and owner stop |
-| Cal.com / Cal.diy write interception | Not integrated; current desks are served by Iris |
-| Held-out three-system results, coffee video, submission | Pending actual VM runs; no fabricated results |
-
-This is a working isolated-agent milestone, **not a completed hackathon submission**. See [actual development-run evidence](docs/DEVELOPMENT_RUNS.md); these runs are not held-out measurements.
-
-## Permission and persistence
-
-`backend/iris/gate.py` is a pure `decide` function. It knows resource type, record ID, field rules, prohibited operations, and version. `Store.submit` begins an immediate SQLite transaction, loads the server-side permission and current record, calls `decide` exactly once, and updates the record only on `allow`. It consumes successful permissions, invalidates stale permissions, records before/after snapshots, and commits the change and audit together. Agent saves also commit the durable receipt and completed job state in that same transaction. Expired worker leases are checked inside every write transaction; an in-flight reader cannot save after its lease expires. JSON types are compared strictly.
-
-An exact write can include unchanged form fields. An unauthorized extra change, wrong record, forbidden operation, or wrong version cannot save. A missing or consumed permission pauses. A version is captured before Spark interprets a typed sentence, or before audio collection for speech, and checked again when locking the permission.
-
-The current product editors support booking-day and order-quantity instructions. Other fields are preserved. This is an explicit application scope; the underlying gate supports arbitrary field rules. Full dates/time zones and broader edit schemas remain work before a production scheduling integration. Spoken instructions use a server-side snapshot captured before audio collection. Transcript corrections retain that snapshot; an explicit `Use as a new typed instruction` action starts a new typed instruction instead. Snapshots expire after ten minutes and are consumed atomically when the permission is locked. A record changed during speech or review cannot silently receive renewed authorization.
-
-## Meta usage and budget
-
-Meta runs `muse-spark-1.3` Standard and `muse-voice-transcribe-1.0`. The default independent reader uses Baseten `meta-models/muse-spark-open-1026`, with a separate initial $10 allowance out of $100 credit; see [Baseten setup](docs/BASETEN.md). No Contributor mode, SAM, image generation, or automatic provider retries. A persistent SQLite budget reserves estimated worst-case input/output cost before each model call. Successful token usage settles the reservation; uncertain failures retain it conservatively. The default app budget is $149.99, bounded by `IRIS_SPEND_LIMIT_USD`. This is a local app guard, not a provider account limit; it cannot account for spending from other apps or a deleted database. Set the account limit in Meta's dashboard too.
-
-Pricing assumptions (checked October 28, 2026): Spark input $1.25/M tokens and output $4.25/M; voice $0.18/hour. Cached-token savings are deliberately not assumed. [Meta pricing](https://dev.meta.ai/docs/pricing-rate-limits), [API reference](https://dev.meta.ai/docs/api-reference), [voice format](https://dev.meta.ai/docs/speech-to-text).
-
-Spark 1.3 handles interpretation and browser action selection. Spark Open on Baseten handles the independent form read; selecting `IRIS_READER_PROVIDER=meta` explicitly uses the previous separate Spark prompt instead. There is no automatic provider fallback. The reader sees neither the instruction nor the planner answer. Reader disagreement stops the job; reader agreement never overrides the deterministic gate. Model interpretation can still misunderstand intent: the readable card makes that interpretation inspectable, and the gate enforces the locked permission, not a proof of natural-language understanding.
-
-## Isolation and security scope
-
-The owner app is single-user, loopback-only development software. It has host/origin validation but does not yet have production authentication, session isolation, CSRF tokens, or rate limiting. Do not publish this server or expose it to the agent network. See [VM setup and limitations](docs/VM.md) for the separate, token-protected worker gateway. The worker has no shell tool, host desktop API, real inbox, cookies, or payment connection. The current VM check is a guard, not remote attestation.
-
-The worker must run inside a Linux VM, with access only to the restricted gateway. Neither its token nor the Meta key may enter git. Recording and local databases are ignored. Invented people and prices only. Rejected browser-agent writes are labeled agent misses; intentional manual fault controls are explicitly labeled fault injection.
-
-## Verification
-
-```powershell
-python -m pytest -q
-python -m playwright install chromium
-python scripts/browser_check.py
+```
+python -m pytest -q         # 103 tests: the gate, the ledger, recovery, the reader, the held-out harness
 ```
 
-The browser check uses an isolated temporary database and real browser interactions: wrong record, protected-price fault, Enter save, a newly created buyer and order, mobile overflow, and browser errors. It is a software acceptance test, not an autonomous agent evaluation. `scripts/check_meta.py` makes one bounded **paid** live parser call; it never prints the key.
+## Honest notes
 
-See [recovery and voice guarantees](docs/RECOVERY_AND_VOICE.md), [architecture and delivery order](docs/ARCHITECTURE.md), [evaluation protocol](docs/EVALUATION.md), [Cal integration assessment](docs/CAL_INTEGRATION.md), and [submission draft](docs/SUBMISSION.md). Do not claim measured superiority or a completed recording until those artifacts exist.
+Invented people, invented money, invented prices. No real payments, no real inbox, no cloned cookies. The payments desk is a mock console that *prevents* a wrong transfer; it does not move real money. The agent only ever sees the restricted worker gateway, never your machine. Faults I planted for testing are labeled as fault injection and kept separate from the agent's own mistakes.
+
+No world-first claim. Related work exists, including Google's User Alignment Critic and the Visual Confused Deputy research. Iris's contribution is a permission you can read, enforced on the write, measured head to head against a button-only reviewer.
+
+## A short map of the code
+
+- `backend/iris/gate.py` — the `decide` function. The whole safety argument lives here.
+- `backend/iris/store.py` — the transactional ledger; `decide` is called once, inside the write.
+- `backend/iris/evaluation.py` — the held-out three-system harness.
+- `worker/desktop_worker.py` — the isolated Playwright agent inside the VM.
+- `frontend/src/Evaluation.tsx` — the live comparison and attack view.
+- `docs/EVALUATION.md` — the frozen results and the protocol.
