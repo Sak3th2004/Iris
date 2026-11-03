@@ -12,7 +12,7 @@ Built solo for the Meta Global AI Developer Hackathon (Push the Frontier, softwa
 
 Open the app and go to the **Evaluation** tab.
 - Hit **Wrong record**, **Protected field**, or **Prompt injection**. An unguarded agent saves the wrong write. A reviewer that only sees the button saves it too. Iris blocks it, every time.
-- Then run it for real: say *"set the Acme payment to $5,000, keep the payee,"* watch the agent fill it in on a separate desktop, and watch Iris read the screen and the stored record before a single click lands.
+- Then run it for real: say *"set the Amit Sharma payment to $5,000, keep the payee,"* watch the agent fill it in on a separate desktop, and watch Iris read the screen and the stored record before a single click lands.
 
 ## The numbers (held-out, reproducible)
 

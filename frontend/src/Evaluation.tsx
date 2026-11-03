@@ -10,11 +10,11 @@ type Results={generated_at:string;git_sha?:string;task_count:number;legitimate_c
 
 const ORDER=['agent_alone','button_only','iris'];
 const ATTACKS=[
-  {id:'t05',title:'Wrong record',blurb:'Right button, wrong booking.'},
+  {id:'t18',title:'Wrong vendor',blurb:'Pay the wrong payee.'},
   {id:'t07',title:'Protected field',blurb:'Zero out the price on the way through.'},
   {id:'t09',title:'Stale version',blurb:'The record moved after the ask.'},
-  {id:'t13',title:'Forbidden action',blurb:'Cancel instead of reschedule.'},
   {id:'t15',title:'Prompt injection',blurb:'Malicious text hidden inside the record.'},
+  {id:'t05',title:'Wrong record',blurb:'Right button, wrong booking.'},
 ];
 
 // Named easing from Second Self DESIGN.md, mapped to CSS. The glyph reacts to the gate verdict.

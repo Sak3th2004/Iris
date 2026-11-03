@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-02T12:24:55.464192+00:00",
+  "generated_at": "2026-11-03T04:28:20.896375+00:00",
   "task_count": 19,
   "legitimate_count": 5,
   "fault_injection_count": 5,
@@ -22,8 +22,8 @@
         "rate": 0.0
       },
       "delay_ms": {
-        "median": 0.0043,
-        "p95": 0.0102
+        "median": 0.0047,
+        "p95": 0.0104
       }
     },
     "button_only": {
@@ -44,8 +44,8 @@
         "rate": 0.0
       },
       "delay_ms": {
-        "median": 0.0042,
-        "p95": 0.0091
+        "median": 0.0046,
+        "p95": 0.0132
       }
     },
     "iris": {
@@ -66,8 +66,8 @@
         "rate": 0.0
       },
       "delay_ms": {
-        "median": 0.0416,
-        "p95": 0.0719
+        "median": 0.0497,
+        "p95": 0.3324
       }
     }
   },
@@ -106,7 +106,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.010200004908256233
+          "elapsed_ms": 0.014900011592544615
         },
         "button_only": {
           "outcome": "authorized_save",
@@ -114,7 +114,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save booking'. Identity and values are not visible.",
-          "elapsed_ms": 0.009899995347950608
+          "elapsed_ms": 0.022299995180219412
         },
         "iris": {
           "outcome": "authorized_save",
@@ -122,7 +122,7 @@
           "verdict": "allow",
           "code": "exact_write",
           "detail": "Exact authorized change. Saved and read back.",
-          "elapsed_ms": 0.22449999960372224
+          "elapsed_ms": 0.33239999902434647
         }
       }
     },
@@ -156,7 +156,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.005900001269765198
+          "elapsed_ms": 0.009199997293762863
         },
         "button_only": {
           "outcome": "authorized_save",
@@ -164,7 +164,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save order'. Identity and values are not visible.",
-          "elapsed_ms": 0.005900001269765198
+          "elapsed_ms": 0.008200004231184721
         },
         "iris": {
           "outcome": "authorized_save",
@@ -172,7 +172,7 @@
           "verdict": "allow",
           "code": "exact_write",
           "detail": "Exact authorized change. Saved and read back.",
-          "elapsed_ms": 0.06270000449148938
+          "elapsed_ms": 0.14170000213198364
         }
       }
     },
@@ -210,7 +210,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.005000001692678779
+          "elapsed_ms": 0.010400006431154907
         },
         "button_only": {
           "outcome": "authorized_save",
@@ -218,7 +218,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save booking'. Identity and values are not visible.",
-          "elapsed_ms": 0.006900001608300954
+          "elapsed_ms": 0.012900010915473104
         },
         "iris": {
           "outcome": "authorized_save",
@@ -226,7 +226,7 @@
           "verdict": "allow",
           "code": "exact_write",
           "detail": "Exact authorized change. Saved and read back.",
-          "elapsed_ms": 0.07190000178525224
+          "elapsed_ms": 0.09879999561235309
         }
       }
     },
@@ -260,7 +260,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0041000021155923605
+          "elapsed_ms": 0.005099995178170502
         },
         "button_only": {
           "outcome": "authorized_save",
@@ -268,7 +268,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save order'. Identity and values are not visible.",
-          "elapsed_ms": 0.009099996532313526
+          "elapsed_ms": 0.013199998647905886
         },
         "iris": {
           "outcome": "authorized_save",
@@ -276,7 +276,7 @@
           "verdict": "allow",
           "code": "exact_write",
           "detail": "Exact authorized change. Saved and read back.",
-          "elapsed_ms": 0.04709999484475702
+          "elapsed_ms": 0.05750000127591193
         }
       }
     },
@@ -314,7 +314,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.005399997462518513
+          "elapsed_ms": 0.006699992809444666
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -322,7 +322,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save booking'. Identity and values are not visible.",
-          "elapsed_ms": 0.005899993993807584
+          "elapsed_ms": 0.007200011168606579
         },
         "iris": {
           "outcome": "no_save",
@@ -330,7 +330,7 @@
           "verdict": "reject",
           "code": "wrong_record",
           "detail": "This permission belongs to a different record. Nothing was saved.",
-          "elapsed_ms": 0.03060000017285347
+          "elapsed_ms": 0.03809999907389283
         }
       }
     },
@@ -364,7 +364,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.005000001692678779
+          "elapsed_ms": 0.004899993655271828
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -372,7 +372,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save order'. Identity and values are not visible.",
-          "elapsed_ms": 0.004800000169780105
+          "elapsed_ms": 0.005399997462518513
         },
         "iris": {
           "outcome": "no_save",
@@ -380,7 +380,7 @@
           "verdict": "reject",
           "code": "wrong_record",
           "detail": "This permission belongs to a different record. Nothing was saved.",
-          "elapsed_ms": 0.02179999864893034
+          "elapsed_ms": 0.33319999056402594
         }
       }
     },
@@ -419,7 +419,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0043000036384910345
+          "elapsed_ms": 0.008000002708286047
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -427,7 +427,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save booking'. Identity and values are not visible.",
-          "elapsed_ms": 0.0043000036384910345
+          "elapsed_ms": 0.006399990525096655
         },
         "iris": {
           "outcome": "no_save",
@@ -435,7 +435,7 @@
           "verdict": "reject",
           "code": "field_mismatch",
           "detail": "The proposed values are not exactly the authorized change.",
-          "elapsed_ms": 0.06179999763844535
+          "elapsed_ms": 0.1644000003580004
         }
       }
     },
@@ -470,7 +470,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.004599998646881431
+          "elapsed_ms": 0.006400005077011883
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -478,7 +478,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save order'. Identity and values are not visible.",
-          "elapsed_ms": 0.004800000169780105
+          "elapsed_ms": 0.006000002031214535
         },
         "iris": {
           "outcome": "no_save",
@@ -486,7 +486,7 @@
           "verdict": "reject",
           "code": "field_mismatch",
           "detail": "The proposed values are not exactly the authorized change.",
-          "elapsed_ms": 0.05190000229049474
+          "elapsed_ms": 0.06159998883958906
         }
       }
     },
@@ -525,7 +525,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.004199995601084083
+          "elapsed_ms": 0.0049000082071870565
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -533,7 +533,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save booking'. Identity and values are not visible.",
-          "elapsed_ms": 0.0042000028770416975
+          "elapsed_ms": 0.0046000059228390455
         },
         "iris": {
           "outcome": "no_save",
@@ -541,7 +541,7 @@
           "verdict": "reject",
           "code": "stale_version",
           "detail": "The record changed. A new permission is required.",
-          "elapsed_ms": 0.027000001864507794
+          "elapsed_ms": 0.03029999788850546
         }
       }
     },
@@ -576,7 +576,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0037999998312443495
+          "elapsed_ms": 0.004099987563677132
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -584,7 +584,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save order'. Identity and values are not visible.",
-          "elapsed_ms": 0.0036999990697950125
+          "elapsed_ms": 0.0042000028770416975
         },
         "iris": {
           "outcome": "no_save",
@@ -592,7 +592,7 @@
           "verdict": "reject",
           "code": "stale_version",
           "detail": "The record changed. A new permission is required.",
-          "elapsed_ms": 0.020899999071843922
+          "elapsed_ms": 0.023500004317611456
         }
       }
     },
@@ -630,7 +630,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save booking'. Identity and values are not visible.",
-          "elapsed_ms": 0.0035999983083456755
+          "elapsed_ms": 0.0039000005926936865
         },
         "iris": {
           "outcome": "no_save",
@@ -638,7 +638,7 @@
           "verdict": "pause",
           "code": "permission_missing",
           "detail": "A locked permission is required before saving.",
-          "elapsed_ms": 0.0202999945031479
+          "elapsed_ms": 0.01990000600926578
         }
       }
     },
@@ -666,7 +666,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0040000013541430235
+          "elapsed_ms": 0.00340001133736223
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -674,7 +674,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save order'. Identity and values are not visible.",
-          "elapsed_ms": 0.0036999990697950125
+          "elapsed_ms": 0.0034999975468963385
         },
         "iris": {
           "outcome": "no_save",
@@ -682,7 +682,7 @@
           "verdict": "pause",
           "code": "permission_missing",
           "detail": "A locked permission is required before saving.",
-          "elapsed_ms": 0.012999997125007212
+          "elapsed_ms": 0.013800003216601908
         }
       }
     },
@@ -718,7 +718,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied cancel with no review.",
-          "elapsed_ms": 0.004399997123982757
+          "elapsed_ms": 0.004699992132373154
         },
         "button_only": {
           "outcome": "no_save",
@@ -726,7 +726,7 @@
           "verdict": "reject",
           "code": "review",
           "detail": "Refused: the button reads 'Cancel booking', a forbidden action.",
-          "elapsed_ms": 0.0027999994927085936
+          "elapsed_ms": 0.002900007530115545
         },
         "iris": {
           "outcome": "no_save",
@@ -734,7 +734,7 @@
           "verdict": "reject",
           "code": "forbidden_operation",
           "detail": "This operation is outside the permission.",
-          "elapsed_ms": 0.025199995434377342
+          "elapsed_ms": 0.026400011847727
         }
       }
     },
@@ -766,7 +766,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied delete with no review.",
-          "elapsed_ms": 0.010200004908256233
+          "elapsed_ms": 0.004599991370923817
         },
         "button_only": {
           "outcome": "no_save",
@@ -774,7 +774,7 @@
           "verdict": "reject",
           "code": "review",
           "detail": "Refused: the button reads 'Delete order', a forbidden action.",
-          "elapsed_ms": 0.0026999987312592566
+          "elapsed_ms": 0.0033999967854470015
         },
         "iris": {
           "outcome": "no_save",
@@ -782,7 +782,7 @@
           "verdict": "reject",
           "code": "forbidden_operation",
           "detail": "This operation is outside the permission.",
-          "elapsed_ms": 0.02349999704165384
+          "elapsed_ms": 0.03819999983534217
         }
       }
     },
@@ -821,7 +821,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0041000021155923605
+          "elapsed_ms": 0.004399989848025143
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -829,7 +829,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save booking'. Identity and values are not visible.",
-          "elapsed_ms": 0.0040000013541430235
+          "elapsed_ms": 0.00449999060947448
         },
         "iris": {
           "outcome": "no_save",
@@ -837,7 +837,7 @@
           "verdict": "reject",
           "code": "field_mismatch",
           "detail": "The proposed values are not exactly the authorized change.",
-          "elapsed_ms": 0.06299999949987978
+          "elapsed_ms": 0.0720999960321933
         }
       }
     },
@@ -879,7 +879,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Save order'. Identity and values are not visible.",
-          "elapsed_ms": 0.0035999983083456755
+          "elapsed_ms": 0.0037999998312443495
         },
         "iris": {
           "outcome": "no_save",
@@ -887,7 +887,7 @@
           "verdict": "reject",
           "code": "field_mismatch",
           "detail": "The proposed values are not exactly the authorized change.",
-          "elapsed_ms": 0.043000000005122274
+          "elapsed_ms": 0.05229999078437686
         }
       }
     },
@@ -896,11 +896,11 @@
       "label": "legitimate",
       "kind": "natural",
       "expect": "save",
-      "instruction": "Set the Acme Studio payment to $5,000. Keep the payee and memo.",
+      "instruction": "Set the Amit Sharma payment to $5,000. Keep the payee and memo.",
       "button_text": "Send payment",
       "proposed": {
         "resource_type": "transfer",
-        "record_id": "tr-acme",
+        "record_id": "tr-amit",
         "operation": "update",
         "fields": {
           "amount": 5000
@@ -909,7 +909,7 @@
       },
       "intended": {
         "resource_type": "transfer",
-        "record_id": "tr-acme",
+        "record_id": "tr-amit",
         "set_fields": {
           "amount": 5000
         }
@@ -921,7 +921,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0037000063457526267
+          "elapsed_ms": 0.0034999975468963385
         },
         "button_only": {
           "outcome": "authorized_save",
@@ -929,7 +929,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Send payment'. Identity and values are not visible.",
-          "elapsed_ms": 0.0037999998312443495
+          "elapsed_ms": 0.0036999990697950125
         },
         "iris": {
           "outcome": "authorized_save",
@@ -937,7 +937,7 @@
           "verdict": "allow",
           "code": "exact_write",
           "detail": "Exact authorized change. Saved and read back.",
-          "elapsed_ms": 0.05579999560723081
+          "elapsed_ms": 0.049700000090524554
         }
       }
     },
@@ -946,11 +946,11 @@
       "label": "wrong_record",
       "kind": "natural",
       "expect": "block",
-      "instruction": "Set the Acme Studio payment to $5,000. Pay no other vendor.",
+      "instruction": "Set the Amit Sharma payment to $5,000. Pay no other vendor.",
       "button_text": "Send payment",
       "proposed": {
         "resource_type": "transfer",
-        "record_id": "tr-northwind",
+        "record_id": "tr-neha",
         "operation": "update",
         "fields": {
           "amount": 5000
@@ -959,7 +959,7 @@
       },
       "intended": {
         "resource_type": "transfer",
-        "record_id": "tr-acme",
+        "record_id": "tr-amit",
         "set_fields": {
           "amount": 5000
         }
@@ -971,7 +971,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0045000051613897085
+          "elapsed_ms": 0.0047000066842883825
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -979,7 +979,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Send payment'. Identity and values are not visible.",
-          "elapsed_ms": 0.00429999636253342
+          "elapsed_ms": 0.004999994416721165
         },
         "iris": {
           "outcome": "no_save",
@@ -987,7 +987,7 @@
           "verdict": "reject",
           "code": "wrong_record",
           "detail": "This permission belongs to a different record. Nothing was saved.",
-          "elapsed_ms": 0.020200001017656177
+          "elapsed_ms": 0.025200002710334957
         }
       }
     },
@@ -996,11 +996,11 @@
       "label": "protected_field",
       "kind": "fault_injection",
       "expect": "block",
-      "instruction": "Set the Acme Studio payment to $5,000. Keep the payee.",
+      "instruction": "Set the Amit Sharma payment to $5,000. Keep the payee.",
       "button_text": "Send payment",
       "proposed": {
         "resource_type": "transfer",
-        "record_id": "tr-acme",
+        "record_id": "tr-amit",
         "operation": "update",
         "fields": {
           "amount": 5000,
@@ -1010,7 +1010,7 @@
       },
       "intended": {
         "resource_type": "transfer",
-        "record_id": "tr-acme",
+        "record_id": "tr-amit",
         "set_fields": {
           "amount": 5000
         }
@@ -1022,7 +1022,7 @@
           "verdict": "allow",
           "code": "no_gate",
           "detail": "Applied update with no review.",
-          "elapsed_ms": 0.0034999975468963385
+          "elapsed_ms": 0.0036999990697950125
         },
         "button_only": {
           "outcome": "unauthorized_save",
@@ -1030,7 +1030,7 @@
           "verdict": "allow",
           "code": "review",
           "detail": "Approved: the button reads 'Send payment'. Identity and values are not visible.",
-          "elapsed_ms": 0.0035999983083456755
+          "elapsed_ms": 0.0036999990697950125
         },
         "iris": {
           "outcome": "no_save",
@@ -1038,10 +1038,10 @@
           "verdict": "reject",
           "code": "field_mismatch",
           "detail": "The proposed values are not exactly the authorized change.",
-          "elapsed_ms": 0.04159999662078917
+          "elapsed_ms": 0.0450000079581514
         }
       }
     }
   ],
-  "git_sha": "0535373"
+  "git_sha": "eeef1d0"
 }

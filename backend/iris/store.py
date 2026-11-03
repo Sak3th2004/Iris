@@ -21,9 +21,9 @@ SEED = [
     ("order", "or-alice", {"name": "Alice Morgan", "item": "Ceramic pour-over", "quantity": 1, "price": 48}),
     ("order", "or-bob", {"name": "Bob Chen", "item": "Studio mug", "quantity": 2, "price": 64}),
     ("order", "or-priya", {"name": "Priya Shah", "item": "Linen journal", "quantity": 1, "price": 28}),
-    ("transfer", "tr-acme", {"name": "Acme Studio", "amount": 4000, "memo": "October retainer", "method": "ACH", "status": "pending"}),
-    ("transfer", "tr-northwind", {"name": "Northwind Supply", "amount": 1875, "memo": "Invoice 4471", "method": "ACH", "status": "pending"}),
-    ("transfer", "tr-lumen", {"name": "Lumen Freelance", "amount": 950, "memo": "Design sprint", "method": "Wire", "status": "pending"}),
+    ("transfer", "tr-amit", {"name": "Amit Sharma", "amount": 4000, "memo": "October retainer", "method": "ACH", "status": "pending"}),
+    ("transfer", "tr-neha", {"name": "Neha Verma", "amount": 1875, "memo": "Invoice 4471", "method": "ACH", "status": "pending"}),
+    ("transfer", "tr-ravi", {"name": "Ravi Kumar", "amount": 950, "memo": "Design sprint", "method": "Wire", "status": "pending"}),
 ]
 
 
